@@ -1,0 +1,6 @@
+gym==0.26.2
+gym-notices==0.0.8
+gym-super-mario-bros==7.4.0
+numpy==1.26.1
+torch==2.1.0
+tqdm==4.66.1
