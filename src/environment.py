@@ -39,7 +39,7 @@ class DownsampleAndGreyscale(gym.ObservationWrapper):
         )
     
     def observation(self, observation):
-        return FrameSkipWrapper.process(observation)
+        return DownsampleAndGreyscale.process(observation)
 
     @staticmethod
     def process(frame):
@@ -98,8 +98,8 @@ class PixelNormalize(gym.ObservationWrapper):
         return np.array(obs).astype(np.float32) / 255.0
 
 
-def create_mario_env(env):
-    env = FrameSkipWrapper(env)
+def create_mario_env(map = "SuperMarioBros-v0"):
+    env = FrameSkipWrapper(gym_super_mario_bros.make(map))
     env = DownsampleAndGreyscale(env)
     env = FrameToTensor(env)
     env = BufferWrapper(env, 4)
@@ -108,8 +108,7 @@ def create_mario_env(env):
 
 class MarioEnvironment:
     def __init__(self):
-        self.env =  gym_super_mario_bros.make('SuperMarioBros-v0')
-        self.env = JoypadSpace(self.env, SIMPLE_MOVEMENT)
+        self.env = create_mario_env()
     #Test run with random moves
     def test_run(self):
         done = True
@@ -125,4 +124,4 @@ class MarioEnvironment:
         play(gym_super_mario_bros.make("SuperMarioBros-v0"), self.env.get_keys_to_action())
 
 mario = MarioEnvironment()
-mario.play()
+mario.test_run()
