@@ -122,6 +122,3 @@ class MarioEnvironment:
     #Play with keyboard
     def play(self):
         play(gym_super_mario_bros.make("SuperMarioBros-v0"), self.env.get_keys_to_action())
-
-mario = MarioEnvironment()
-mario.test_run()
