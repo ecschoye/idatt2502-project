@@ -1,7 +1,7 @@
 from gym.core import Env
 from nes_py.wrappers import JoypadSpace
 import gym_super_mario_bros
-from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
+from gym_super_mario_bros.actions import COMPLEX_MOVEMENT, SIMPLE_MOVEMENT
 from gym.utils.play import play
 import gym
 import cv2
@@ -110,7 +110,7 @@ def create_mario_env(env):
 class MarioEnvironment:
     def __init__(self):
         self.env =  gym_super_mario_bros.make('SuperMarioBros-v0')
-        self.env = JoypadSpace(self.env, COMPLEX_MOVEMENT)
+        self.env = JoypadSpace(self.env, SIMPLE_MOVEMENT)
     #Test run with random moves
     def test_run(self):
         done = True
@@ -123,9 +123,7 @@ class MarioEnvironment:
         self.env.close()
     #Play with keyboard
     def play(self):
-        print(self.env._action_meanings)
-        print(self.env.action_space)
         play(gym_super_mario_bros.make("SuperMarioBros-v0"), self.env.get_keys_to_action())
 
 mario = MarioEnvironment()
-
+mario.play()
