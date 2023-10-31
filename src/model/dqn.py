@@ -30,9 +30,8 @@ class DQN(nn.Module):
         return int(np.prod(o.size()))
 
     def forward(self, x):
-        x = self.conv(x)
-        x = x.view(x.size(0), -1)
-        return self.fc(x)
+        conv_out = self.conv(x).view(x.size()[0], -1)
+        return self.fc(conv_out)
 
     def save(self, target: bool = False):
         dir_path = "../trained_model/target" if target else "../trained_model/current"

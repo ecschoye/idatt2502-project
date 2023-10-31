@@ -1,7 +1,10 @@
 import pickle
+import random
+
 import torch
 import numpy as np
 import torch.nn as nn
+from tqdm import tqdm
 
 from ..model.dqn import DQN
 from collections import deque
@@ -9,8 +12,8 @@ from ..utils.replay_buffer import ReplayBuffer
 
 
 class DDQNAgent:
-    def __init__(self, env, state_space, action_space, memory_size=10000, batch_size=64, lr=0.001, gamma=0.99,
-                 epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.995, copy=5000, pretrained_path=None):
+    def __init__(self, env, state_space, action_space, memory_size=20000, batch_size=32, lr=0.0025, gamma=0.90,
+                 epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.995, copy=5000, pretrained_path=None):
         # Environment
         self.env = env
         self.state_space = state_space
@@ -35,6 +38,8 @@ class DDQNAgent:
         self.memory = ReplayBuffer(state_space, self.memory_size)
         self.local_model = DQN(self.state_space, self.action_space).to(self.device)
         self.target_model = DQN(self.state_space, self.action_space).to(self.device)
+        self.ending_position = 0
+        self.num_in_queue = 0
 
         # Load pretrained model
         self.pretrained_path = pretrained_path
@@ -43,7 +48,7 @@ class DDQNAgent:
             self.target_model.load(self.device, self.pretrained_path)
 
         # Optimizer and loss
-        self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.lr)
+        self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.lr, eps=1e-4)
         self.loss = nn.MSELoss()
 
         self.steps = 0
@@ -56,50 +61,53 @@ class DDQNAgent:
     def increment_steps(self):
         self.steps += 1
 
+    def best_action(self, state):
+        return torch.argmax(self.local_model(state.to(self.device))).unsqueeze(0).unsqueeze(0).cpu()
+
     def act(self, state):
+        #print("State shape in act:", state.shape)
         # Epsilon-greedy action selection
-        if np.random.rand() <= self.epsilon:
+        if random.random()  <= self.epsilon:
             action = np.random.randint(self.action_space)
         else:
-            state = torch.tensor(state, dtype=torch.float).unsqueeze(0).to(self.device)
-            action = self.local_model(state).argmax(dim=1).item()
+            action_values = self.local_model(torch.tensor(state, dtype=torch.float32, device=self.device))
+            action = torch.argmax(action_values).item()
 
+        if self.steps % 1000 == 0:
+            self.update_epsilon()
         self.increment_steps()
-        self.update_epsilon()
 
         return action
 
     def remember(self, state, action, reward, next_state, done):
-        self.memory.add(state, action, reward, next_state, done)
+        self.ending_position = (self.ending_position + 1) % self.memory_size
+        self.num_in_queue = min(self.num_in_queue + 1, self.memory_size)
+        self.memory.add(state, action, reward, next_state, done, self.ending_position)
+
+    def update_q_value(self, reward, next_state, done):
+        return reward + torch.mul(self.gamma * self.target_model(next_state).max(1).values.unsqueeze(1), 1 - done)
 
     def update_target_model(self):
         self.target_model.load_state_dict(self.local_model.state_dict())
 
-    def learn(self):
+    def experience_replay(self):
         if self.steps % self.copy == 0:
             self.update_target_model()
-        if self.memory.counter < self.batch_size:
+
+        if self.num_in_queue < self.batch_size:
             return
 
-        # Sample from memory
-        states, actions, rewards, next_states, done_flags = self.memory.sample(self.batch_size, self.device)
+        states, actions, rewards, next_states, done_flags = self.memory.sample(self.num_in_queue, self.batch_size,
+                                                                               self.device)
 
-        next_actions = self.target_model(next_states)
-        local_action_values = self.local_model(states).gather(1, actions.unsqueeze(-1))
+        target = self.update_q_value(rewards, next_states, done_flags)
 
-        max_next_action_values = self.local_model(next_states).argmax(1)
-        next_best_action_values = next_actions.gather(1, max_next_action_values.unsqueeze(-1))
+        current = self.local_model(states).gather(1, actions)
 
-        expected_action_values = rewards + torch.mul(self.gamma * next_best_action_values,
-                                                     (1.0 - done_flags.float()))
-
-        loss = self.loss(local_action_values, expected_action_values)
-        self.train_loss.append(loss.item())
-        self.optimizer.zero_grad()
+        loss = self.loss(current, target)
         loss.backward()
         self.optimizer.step()
 
-        self.update_epsilon()
 
     def save(self):
         self.local_model.save()
@@ -110,22 +118,3 @@ class DDQNAgent:
         self.local_model.load(self.device)
         self.target_model.load(self.device)
         self.memory.load()
-
-    def train(self, num_episodes):
-        for episode in range(num_episodes):
-            state = self.env.reset()
-            episode_reward = 0
-            done = False
-
-            while not done:
-                action = self.act(state)
-                next_state, reward, done, _ = self.env.step(action)
-                self.remember(state, action, reward, next_state, done)
-                self.learn()
-                state = next_state
-                episode_reward += reward
-
-            self.reward_history.append(episode_reward)
-
-            if episode % self.copy == 0:
-                self.update_target_model()
