@@ -4,4 +4,4 @@ gym-super-mario-bros==7.4.0
 numpy
 torch==2.1.0
 tqdm==4.66.1
-opencv-python
+opencv-python==4.8.1.78
