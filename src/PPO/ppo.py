@@ -7,6 +7,7 @@ import numpy as np
 
 class PPO: 
   def __init__(self, env):
+    self._init_hyperparameters()
     # Extract environment information
     self.env = env
     self.obs_dim = env.observation_space.shape[0]
@@ -26,7 +27,7 @@ class PPO:
 
     # Define optimizer for our actor parameters
     self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
-    self.criti_optim = Adam(self.critic.parameters(), lr=self.lr)
+    self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
 
   def _init_hyperparameters(self):
     #Default values for hyperparameters, will need to change later. 
@@ -132,7 +133,7 @@ class PPO:
     batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
 
     # ALG STEP #4
-    batch_rtgs = self.compare_rtgs(batch_rews)
+    batch_rtgs = self.compute_rtgs(batch_rews)
 
     #Return batch data
     return batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens
@@ -187,3 +188,4 @@ class PPO:
     log_probs = dist.log_prob(batch_acts)
 
     return V, log_probs
+  
