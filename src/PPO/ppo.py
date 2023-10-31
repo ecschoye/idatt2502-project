@@ -1,7 +1,9 @@
 import torch 
+from torch import nn
 from torch.distributions import MultivariateNormal
+from torch.optim import Adam
 from network import FeedForwardNN
-
+import numpy as np
 
 class PPO: 
   def __init__(self, env):
@@ -22,12 +24,19 @@ class PPO:
     # Create the covariance matrix 
     self.cov_mat = torch.diag(self.cov_var)
 
+    # Define optimizer for our actor parameters
+    self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
+    self.criti_optim = Adam(self.critic.parameters(), lr=self.lr)
+
   def _init_hyperparameters(self):
     #Default values for hyperparameters, will need to change later. 
     self.timesteps_per_batch = 4800        # timesteps per batch
     self.max_timesteps_per_episode = 1600  # timesteps per episode
 
     self.gamma = 0.95
+    self.n_updates_per_iteration = 5       # number of updates per iteration
+    self.clip = 0.2                        # Recommended
+    self.lr = 0.005                        # Learning rate
 
   def learn(self, total_timesteps):  
     t_so_far = 0 # Timesteps simulated so far
@@ -36,6 +45,44 @@ class PPO:
     while t_so_far < total_timesteps: 
       # ALG STEP #3
       batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens = self.rollout()
+
+      # Calculate how many timesteps we collected this batch
+      t_so_far += np.sum(batch_lens)
+
+      # Calculate V_{phi, k}
+      V, _ = self.evaluate(batch_obs, batch_acts)
+
+      # ALG STEP 5
+      # Calculate advantage
+      A_k = batch_rtgs - V.detach()
+
+      # Normalize advantages 
+      A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
+
+      for _ in range(self.n_updates_per_iteration):
+        # Calculate pi_theta(a_t | s_t)
+        V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
+
+        # Calculate ratios 
+        ratios = torch.exp(curr_log_probs - batch_log_probs)
+
+        # Calculate surrogate losses
+        surr1 = ratios * A_k
+        surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * A_k
+
+        actor_loss = (-torch.min(surr1, surr2)).mean()
+        critic_loss = nn.MSELoss()(V, batch_rtgs)
+
+        # Calculate gradients and perform backward propagation for actor network
+        self.actor_optim.zero_grad()
+        actor_loss.backward(retain_graph=True)
+        self.actor_optim.step()
+        
+        # Calculate gradients and perform backward propagation for critic network
+        self.critic_optim.zero_grad()    
+        critic_loss.backward()    
+        self.critic_optim.step()
+
 
   def rollout(self):
     # Batch data
@@ -127,3 +174,16 @@ class PPO:
     # log prob as tensor is fine. Our computation graph will
     # start later down the line.
     return action.detach().numpy(), log_prob.detach()
+  
+  def evaluate(self, batch_obs, batch_acts): 
+    # Query critic network for a value V for each obs in batch_obs
+    V = self.critic(batch_obs).squeeze()
+
+    # Calculate the log probabilities of batch actions using most
+    # recent actor network 
+    # This segment of code is similar to that in get_action()
+    mean = self.actor(batch_obs)
+    dist = MultivariateNormal(mean, self.cov_mat)
+    log_probs = dist.log_prob(batch_acts)
+
+    return V, log_probs
