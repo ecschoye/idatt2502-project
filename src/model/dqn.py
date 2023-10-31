@@ -1,7 +1,7 @@
-import torch.nn as nn
+import os
 import torch
 import numpy as np
-import os
+import torch.nn as nn
 
 
 class DQN(nn.Module):
@@ -43,4 +43,3 @@ class DQN(nn.Module):
         dir_path = "./trained_model/target" if target else "./trained_model/current"
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         self.load_state_dict(torch.load(dir_path + "_ddqn_model.pt", map_location=device))
-

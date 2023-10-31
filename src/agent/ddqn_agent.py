@@ -1,11 +1,10 @@
 import pickle
+import torch
+import numpy as np
+import torch.nn as nn
 
 from ..model.dqn import DQN
 from collections import deque
-import torch
-import torch.nn as nn
-import numpy as np
-
 from ..utils.replay_buffer import ReplayBuffer
 
 
@@ -73,7 +72,6 @@ class DDQNAgent:
     def remember(self, state, action, reward, next_state, done):
         self.memory.add(state, action, reward, next_state, done)
 
-
     def update_target_model(self):
         self.target_model.load_state_dict(self.local_model.state_dict())
 
@@ -92,7 +90,6 @@ class DDQNAgent:
         max_next_action_values = self.local_model(next_states).argmax(1)
         next_best_action_values = next_actions.gather(1, max_next_action_values.unsqueeze(-1))
 
-        #expected_action_values = rewards + self.gamma * next_best_action_values * (1.0 - done_flags.float())
         expected_action_values = rewards + torch.mul(self.gamma * next_best_action_values,
                                                      (1.0 - done_flags.float()))
 

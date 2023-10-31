@@ -1,8 +1,8 @@
 import time
+import torch
 
 from model.dqn import DQN
 from environment import create_mario_env
-import torch
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
