@@ -27,6 +27,7 @@ class FrameSkipWrapper(gym.Wrapper):
             if(done):
                 break
         obs = np.max(np.stack(self.buffer), axis=0)
+        self.frame = obs.copy()
         return obs, total_reward, done, info
 
 class DownsampleAndGreyscale(gym.ObservationWrapper):
@@ -116,17 +117,18 @@ class MarioEnvironment:
         if log:
             logger = NeptuneRun(params={"learning_rate": 0.0})
         done = True
-        rewards = []
-        for step in range(10):
+        frames = []
+        for step in range(100):
             if done:
                 state = self.env.reset()
             state, reward, done, info = self.env.step(self.env.action_space.sample())
-            rewards.append(reward)
+            frames.append(self.env.frame)
             # self.env.render()
         self.env.close()
         if log:
-            logger.log_lists({"rewards": rewards})
-
+            logger.log_frames(frames)
+        logger.finish()
     # Play with keyboard
     def play(self):
         play(gym_super_mario_bros.make("SuperMarioBros-v0"), self.env.get_keys_to_action())
+
