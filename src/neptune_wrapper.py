@@ -57,6 +57,8 @@ class NeptuneRun:
     def finish(self):
         self.run.stop()
     def __del__(self):
-        self.run.stop()
+        if(self.run.get_state != 'stopped'){
+            self.run.stop()
+        }
     
 
