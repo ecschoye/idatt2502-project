@@ -1,6 +1,9 @@
-
+import torch
+from torch.distributions import Categorical
 
 def evaluate(policy, env, render=False):
+	if torch.cuda.is_available():
+		policy = policy.cuda()
   # Rollout with the policy and environment, and log each episode's data
 	for ep_num, (ep_len, ep_ret) in enumerate(rollout(policy, env, render)):
 		_log_summary(ep_len=ep_len, ep_ret=ep_ret, ep_num=ep_num)
@@ -67,8 +70,9 @@ def rollout(policy, env, render):
 				env.render()
 
 			# Query deterministic action from policy and run it
-			action = policy(obs).detach().numpy()
-			obs, rew, done, _ = env.step(action)
+			action = policy(obs)
+			action_dist = Categorical(action)
+			obs, rew, done, _ = env.step(action_dist.sample().item())
 
 			# Sum all episodic rewards as we go along
 			ep_ret += rew
