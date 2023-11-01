@@ -32,7 +32,7 @@ class PPO:
 
     # Define optimizer for our actor parameters
     self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
-    self.critic_optim = Adam(self.actor.parameters(), lr=self.lr)
+    self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
 
     # This logger will help us with printing out summaries of each iteration
     self.logger = {
@@ -49,14 +49,14 @@ class PPO:
     self.timesteps_per_batch = 10000        # timesteps per batch
     self.max_timesteps_per_episode = 1000  # timesteps per episode
 
-    self.gamma = 0.98
+    self.gamma = 0.99
     self.n_updates_per_iteration = 10      # number of updates per iteration
-    self.clip = 0.1                        # Recommended
-    self.lr = 0.0005                        # Learning rate
+    self.clip = 0.2                       # Recommended
+    self.lr = 0.001                        # Learning rate
 
-    self.save_freq = 5                    # How often we save in number of iterations
+    self.save_freq = 4                    # How often we save in number of iterations
     self.render = True
-    self.render_every_i = 10
+    self.render_every_i = 1
 
   def learn(self, total_timesteps):  
     print("Starting learning process")
@@ -100,7 +100,7 @@ class PPO:
         self.actor_optim.zero_grad()
         actor_loss.backward(retain_graph=True)
         self.actor_optim.step()
-
+        
         critic_loss = nn.MSELoss()(V, batch_rtgs)
         
         # Calculate gradients and perform backward propagation for critic network
@@ -212,7 +212,7 @@ class PPO:
   def evaluate(self, batch_obs, batch_acts): 
     # Query critic network for a value V for each obs in batch_obs
     V = self.critic(batch_obs[0]).squeeze()
-
+    
     # Calculate the log probabilities of batch actions using most
     # recent actor network 
     # This segment of code is similar to that in get_action()

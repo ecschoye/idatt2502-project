@@ -4,7 +4,10 @@ from environment import create_mario_env
 from network import DiscreteActorCriticNN
 from ppo import PPO
 import evaluate
+torch.autograd.set_detect_anomaly(True)
 
+ACTOR_PATH  = './src/PPO/ppo_actor.pth'
+CRITIC_PATH = './src/PPO/ppo_critic.pth'
 STRINGS = {
   'menu': """
     Welcome to Proximal Policy Main
@@ -31,9 +34,9 @@ def main():
   if choice == 1:
     train(env, '', '')
   elif choice == 2:
-    train(env, './src/PPO/ppo_actor.pth', './src/PPO/ppo_critic.pth')
+    train(env, ACTOR_PATH, CRITIC_PATH)
   elif choice == 3: 
-    test(env, './src/PPO/ppo_actor.pth', './src/PPO/ppo_critic.pth')  
+    test(env, ACTOR_PATH, CRITIC_PATH)  
 
 def train(env, actor_model, critic_model): 
   model = PPO(env)
