@@ -1,9 +1,7 @@
-import gym 
-import sys
 import torch
-
+from environment import create_mario_env
+from network import DiscreteActorCriticNN
 from ppo import PPO
-from network import FeedForwardNN
 import evaluate
 
 STRINGS = {
@@ -24,7 +22,7 @@ def main():
     Main Function to run training or testing 
   """
 
-  env = gym.make('Pendulum-v1')
+  env = create_mario_env()
 
   print(STRINGS['menu'], flush=True)
   choice = int(input("Enter a number:"))
@@ -47,7 +45,7 @@ def train(env, actor_model, critic_model):
   else:
     print(STRINGS['from_scratch'], flush=True)
 
-  model.learn(total_timesteps=200_000)
+  model.learn(total_timesteps=30_000)
 
 def test(env, actor_model, critic_model):
   print(STRINGS['testing'], flush=True)
@@ -58,7 +56,7 @@ def test(env, actor_model, critic_model):
 
   # Build our policy the same way we build our actor model in PPO
   # Load in the actor model saved by the PPO algorithm
-  policy = FeedForwardNN(obs_dim, act_dim)
+  policy = DiscreteActorCriticNN(obs_dim, act_dim)
   policy.load_state_dict(torch.load(actor_model))
 
   evaluate(policy, env, render=True)

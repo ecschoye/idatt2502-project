@@ -5,24 +5,35 @@ import numpy as np
 
 # Setting up a basic Feed Forward Neural Network
 
-class FeedForwardNN(nn.Module): 
+class DiscreteActorCriticNN(nn.Module): 
   def __init__(self, in_dim, out_dim): 
-    super(FeedForwardNN, self).__init__()
+    super(DiscreteActorCriticNN, self).__init__()
 
-    #Adding neural network layers using basic nn.Linear layers
-    self.layer1 = nn.Linear(in_dim, 64)
-    self.layer2 = nn.Linear(64, 64)
-    self.layer3 = nn.Linear(64, out_dim)
+    self.conv = nn.Sequential(
+      nn.Conv2d(in_dim[0], 32, kernel_size=8, stride=4),
+      nn.ReLU(),
+      nn.Conv2d(32, 64, kernel_size=4, stride=2),
+      nn.ReLU(),
+      nn.Conv2d(64, 64, kernel_size=2, stride=1),
+      nn.ReLU()
+    )
+
+    conv_out_size = self._get_conv_out(in_dim)
+
+    self.fc = nn.Sequential(
+      nn.Linear(conv_out_size, 512),
+      nn.ReLU(),
+      nn.Linear(512, out_dim)
+    )
 
   # Forward function to do a forward pass on our network. 
   # Uses ReLU for activation
-  def forward(self, obs): 
-    #Convert observation to tensor if it's a numpy array
-    if isinstance(obs, np.ndarray): 
-      obs = torch.tensor(obs, dtype=torch.float)
-    
-    activation1 = F.relu(self.layer1(obs))
-    activation2 = F.relu(self.layer2(activation1))
-    output = self.layer3(activation2)
+  def _get_conv_out(self, shape):
+    o = self.conv(torch.zeros(1, *shape))
+    return int(np.prod(o.size()))
 
-    return output
+  def forward(self, state):
+    x = torch.tensor(state, dtype=torch.float).unsqueeze(0)
+    x = self.conv(x)
+    x = x.view(x.size(0), -1)
+    return F.softmax(self.fc(x), dim=0)
