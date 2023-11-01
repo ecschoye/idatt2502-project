@@ -16,7 +16,7 @@ class NeptuneModels:
     def create_model(self, model_key, model_name, model_info = None):
         """
         Init a new neptune model
-        model key format ALL CAPS EG: MODEL_ONE
+        model key format ALL CAPS EG: MODELONE
         model name any given string
         """
         model = neptune.init_model(
@@ -29,7 +29,7 @@ class NeptuneModels:
             model["model"] = model_info
         model.stop()
     
-    def model_version(self, model_key, model_params, model_results, folders_to_track = None):
+    def model_version(self, model_key, model_params, model_data, folders_to_track = None):
         """
             Create a new version of a trained model.
             Give it the key of the existing model, the model_params used to train.
@@ -44,8 +44,8 @@ class NeptuneModels:
             api_token=NEPTUNE_API_KEY,
         )
         model_version["model/parameters"] = model_params
-        model_version["model/results"] = model_results
-        
+        model_version["model/data"] = model_data
+
         if folders_to_track != None:
             for i in range(len(folders_to_track)):
                 model_version["validation/dataset"].track_files(folders_to_track[i])
@@ -54,6 +54,7 @@ class NeptuneModels:
 class NeptuneRun:
     """
     Wrapper class for interacting with neptune.ai API. Should be reinitialized 
+    
     """
     def __init__(self, params):
         self.run = neptune.init_run(
@@ -117,10 +118,3 @@ class NeptuneRun:
     def __del__(self):
         if(self.run.get_state != 'stopped'):
             self.run.stop()
-    
-
-model = neptune.init_model_version(
-    with_id="MARIO-DDQN-10",
-    project=NEPTUNE_PROJECT,
-    api_token=NEPTUNE_API_KEY,
-    )
