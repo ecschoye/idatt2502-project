@@ -6,6 +6,7 @@ import gym
 import cv2
 import collections
 import numpy as np
+from neptune_wrapper import NeptuneRun
 
 class FrameSkipWrapper(gym.Wrapper):
     """
@@ -109,19 +110,23 @@ def create_mario_env(map = "SuperMarioBros-v0"):
 class MarioEnvironment:
     def __init__(self):
         self.env = create_mario_env()
-    #Test run with random moves
-    def test_run(self):
+
+    # Test run with random move
+    def test_run(self, log=False):
+        if log:
+            logger = NeptuneRun(params={"learning_rate": 0.0})
         done = True
-        for step in range(5000):
+        rewards = []
+        for step in range(10):
             if done:
                 state = self.env.reset()
             state, reward, done, info = self.env.step(self.env.action_space.sample())
-            self.env.render()
-
+            rewards.append(reward)
+            # self.env.render()
         self.env.close()
-    #Play with keyboard
+        if log:
+            logger.log_lists({"rewards": rewards})
+
+    # Play with keyboard
     def play(self):
         play(gym_super_mario_bros.make("SuperMarioBros-v0"), self.env.get_keys_to_action())
-
-mario = MarioEnvironment()
-mario.test_run()
