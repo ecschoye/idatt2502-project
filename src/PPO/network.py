@@ -32,7 +32,7 @@ class DiscreteActorCriticNN(nn.Module):
   # Forward function to do a forward pass on our network. 
   # Uses ReLU for activation
   def _get_conv_out(self, shape):
-    o = self.conv(torch.zeros(1, *shape).to(self.device))
+    o = self.conv(torch.zeros(1, *shape)).to(self.device)
     return int(np.prod(o.size()))
 
   def forward(self, state):
