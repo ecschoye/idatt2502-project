@@ -2,6 +2,7 @@ import neptune
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import cv2
 
 NEPTUNE_API_KEY = os.getenv('NEPTUNE_API_TOKEN')
 NEPTUNE_PROJECT = os.getenv('NEPTUNE_PROJECT_NAME')
@@ -54,11 +55,22 @@ class NeptuneRun:
         if metadata_dict != None:
             for key in (metadata_dict):
                 self.run[key].extend([metadata_dict[key]  for metadata_dict[key] in range(len(metadata_dict[key]))])
+
+    def log_frames(self, frames):
+        x,y,z = frames[0].shape
+        size = (y,x)
+        vid = cv2.VideoWriter('animation.mp4',cv2.VideoWriter_fourcc(*'mp4v'),24, size, True)
+        for frame in frames:
+            rgb_img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            vid.write(rgb_img)
+        vid.release()
+        self.run["train/animation"].upload('animation.mp4')
+        self.run.wait()
+        os.remove('animation.mp4')
     def finish(self):
         self.run.stop()
     def __del__(self):
-        if(self.run.get_state != 'stopped'){
+        if(self.run.get_state != 'stopped'):
             self.run.stop()
-        }
     
 
