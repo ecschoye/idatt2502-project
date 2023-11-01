@@ -7,9 +7,54 @@ import cv2
 NEPTUNE_API_KEY = os.getenv('NEPTUNE_API_TOKEN')
 NEPTUNE_PROJECT = os.getenv('NEPTUNE_PROJECT_NAME')
 
+class NeptuneModels:
+    """
+    Wrapper class for creating and modifying models in neptune.ai
+    """
+    def __init__(self):
+        pass
+    def create_model(self, model_key, model_name, model_info = None):
+        """
+        Init a new neptune model
+        model key format ALL CAPS EG: MODELONE
+        model name any given string
+        """
+        model = neptune.init_model(
+            key = model_key,
+            name = model_name,
+            project=NEPTUNE_PROJECT,
+            api_token=NEPTUNE_API_KEY,
+            )
+        if(model_info != None):
+            model["model"] = model_info
+        model.stop()
+    
+    def model_version(self, model_key, model_params, model_data, folders_to_track = None):
+        """
+            Create a new version of a trained model.
+            Give it the key of the existing model, the model_params used to train.
+            Any optional datafiles wanted in a dict with paths to existing files e.g. {
+                "replay_buffer" : "replay_buffer.csv"
+            }
+            Give a path to a saved binary, eg "model.pt"
+        """
+        model_version = neptune.init_model_version(
+            model = model_key,
+            project=NEPTUNE_PROJECT,
+            api_token=NEPTUNE_API_KEY,
+        )
+        model_version["model/parameters"] = model_params
+        model_version["model/data"] = model_data
+
+        if folders_to_track != None:
+            for i in range(len(folders_to_track)):
+                model_version["validation/dataset"].track_files(folders_to_track[i])
+        model_version.stop()
+
 class NeptuneRun:
     """
     Wrapper class for interacting with neptune.ai API. Should be reinitialized 
+    
     """
     def __init__(self, params):
         self.run = neptune.init_run(
@@ -67,10 +112,9 @@ class NeptuneRun:
         self.run["train/animation"].upload('animation.mp4')
         self.run.wait()
         os.remove('animation.mp4')
+        
     def finish(self):
         self.run.stop()
     def __del__(self):
         if(self.run.get_state != 'stopped'):
             self.run.stop()
-    
-

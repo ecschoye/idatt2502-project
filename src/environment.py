@@ -118,17 +118,19 @@ class MarioEnvironment:
             logger = NeptuneRun(params={"learning_rate": 0.0})
         done = True
         frames = []
+        rewards = []
         for step in range(100):
             if done:
                 state = self.env.reset()
             state, reward, done, info = self.env.step(self.env.action_space.sample())
+            rewards.append(reward)
             frames.append(self.env.frame)
             # self.env.render()
         self.env.close()
         if log:
+            logger.log_lists({"rewards" : rewards})
             logger.log_frames(frames)
-        logger.finish()
+            logger.finish()
     # Play with keyboard
     def play(self):
         play(gym_super_mario_bros.make("SuperMarioBros-v0"), self.env.get_keys_to_action())
-
