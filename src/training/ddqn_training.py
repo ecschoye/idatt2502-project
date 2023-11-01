@@ -35,6 +35,7 @@ def train_mario():
             steps += 1
 
             next_state, reward, done, info = env.step(action)
+            reward = get_reward(done, steps, reward, evn)
             total_reward += reward
             next_state = torch.tensor(np.array([next_state]))
             # print("Next state shape:", next_state.shape)
@@ -70,6 +71,11 @@ def train_mario():
     agent.save()
     env.close()
 
+
+def get_reward(done, step, reward, evn):
+    if not done or step == env._max_episode_steps-1:
+        return reward
+    return -100
 
 def render_mario():
     your_state_space = (4, 84, 84)
