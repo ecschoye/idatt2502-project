@@ -18,11 +18,16 @@ class PPO:
     self.env = env
     self.obs_dim = env.observation_space.shape
     self.act_dim = env.action_space.n
+
+    self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if not torch.cuda.is_available():
+      print("Warning: CUDA not available, running on CPU.")
+
     
     # ALG STEP 1
     # Initialize actor and critic networks 
-    self.actor = DiscreteActorCriticNN(self.obs_dim, self.act_dim)
-    self.critic = DiscreteActorCriticNN(self.obs_dim, 1)
+    self.actor = DiscreteActorCriticNN(self.obs_dim, self.act_dim).to(self.device)
+    self.critic = DiscreteActorCriticNN(self.obs_dim, 1).to(self.device)
 
     # Create our variable for the matrix 
     # Chose 0.5 for stdev arbitrarily 
@@ -163,12 +168,12 @@ class PPO:
       batch_rews.append(ep_rews)
 
     # Reshape data as tensors in the shape specified before returning
-    batch_obs = torch.tensor(batch_obs, dtype=torch.float)
-    batch_acts = torch.tensor(batch_acts, dtype=torch.long)
-    batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float)
+    batch_obs = torch.tensor(batch_obs, dtype=torch.float).to(self.device)
+    batch_acts = torch.tensor(batch_acts, dtype=torch.long).to(self.device)
+    batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float).to(self.device)
 
     # ALG STEP #4
-    batch_rtgs = self.compute_rtgs(batch_rews)
+    batch_rtgs = self.compute_rtgs(batch_rews).to(self.device)
 
     # Log the episodic returns and episodic lengths in this batch.
     self.logger['batch_rews'] = batch_rews

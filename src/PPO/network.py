@@ -9,6 +9,9 @@ class DiscreteActorCriticNN(nn.Module):
   def __init__(self, in_dim, out_dim): 
     super(DiscreteActorCriticNN, self).__init__()
 
+    self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    self.to(self.device)
+
     self.conv = nn.Sequential(
       nn.Conv2d(in_dim[0], 32, kernel_size=8, stride=4),
       nn.ReLU(),
@@ -29,11 +32,11 @@ class DiscreteActorCriticNN(nn.Module):
   # Forward function to do a forward pass on our network. 
   # Uses ReLU for activation
   def _get_conv_out(self, shape):
-    o = self.conv(torch.zeros(1, *shape))
+    o = self.conv(torch.zeros(1, *shape).to(self.device))
     return int(np.prod(o.size()))
 
   def forward(self, state):
-    x = torch.tensor(state, dtype=torch.float).unsqueeze(0)
+    x = torch.tensor(state, dtype=torch.float).unsqueeze(0).to(self.device)
     x = self.conv(x)
     x = x.view(x.size(0), -1)
     return F.softmax(self.fc(x), dim=0)
