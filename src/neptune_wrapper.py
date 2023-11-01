@@ -59,7 +59,7 @@ class NeptuneRun:
     def log_frames(self, frames):
         x,y,z = frames[0].shape
         size = (y,x)
-        vid = cv2.VideoWriter('animation.mp4',cv2.VideoWriter_fourcc(*'mp4v'),24, size, True)
+        vid = cv2.VideoWriter('animation.mp4',cv2.VideoWriter_fourcc(*'avc1'),30, size, True)
         for frame in frames:
             rgb_img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             vid.write(rgb_img)
