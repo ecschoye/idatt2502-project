@@ -1,8 +1,5 @@
-import gym 
 import torch
 from environment import create_mario_env
-from nes_py.wrappers import JoypadSpace
-from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from network import DiscreteActorCriticNN
 from ppo import PPO
 import evaluate
