@@ -1,5 +1,6 @@
 import torch 
 import time
+import gc
 import gym
 import numpy as np
 from torch import nn
@@ -29,13 +30,6 @@ class PPO:
     self.actor = DiscreteActorCriticNN(self.obs_dim, self.act_dim).to(self.device)
     self.critic = DiscreteActorCriticNN(self.obs_dim, 1).to(self.device)
 
-    # Create our variable for the matrix 
-    # Chose 0.5 for stdev arbitrarily 
-    self.cov_var = torch.full(size=(self.act_dim,), fill_value=0.5)
-
-    # Create the covariance matrix 
-    self.cov_mat = torch.diag(self.cov_var)
-
     # Define optimizer for our actor parameters
     self.actor_optim = Adam(self.actor.parameters(), lr=self.lr)
     self.critic_optim = Adam(self.actor.parameters(), lr=self.lr)
@@ -52,17 +46,17 @@ class PPO:
 
   def _init_hyperparameters(self):
     #Default values for hyperparameters, will need to change later. 
-    self.timesteps_per_batch = 3000        # timesteps per batch
-    self.max_timesteps_per_episode = 700  # timesteps per episode
+    self.timesteps_per_batch = 10000        # timesteps per batch
+    self.max_timesteps_per_episode = 1000  # timesteps per episode
 
-    self.gamma = 0.90
-    self.n_updates_per_iteration = 4      # number of updates per iteration
+    self.gamma = 0.98
+    self.n_updates_per_iteration = 10      # number of updates per iteration
     self.clip = 0.1                        # Recommended
-    self.lr = 0.001                        # Learning rate
+    self.lr = 0.0005                        # Learning rate
 
-    self.save_freq = 2                    # How often we save in number of iterations
+    self.save_freq = 5                    # How often we save in number of iterations
     self.render = True
-    self.render_every_i = 5
+    self.render_every_i = 10
 
   def learn(self, total_timesteps):  
     print("Starting learning process")
@@ -101,12 +95,13 @@ class PPO:
         surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * A_k
 
         actor_loss = (-torch.min(surr1, surr2)).mean()
-        critic_loss = nn.MSELoss()(V, batch_rtgs)
 
         # Calculate gradients and perform backward propagation for actor network
         self.actor_optim.zero_grad()
         actor_loss.backward(retain_graph=True)
         self.actor_optim.step()
+
+        critic_loss = nn.MSELoss()(V, batch_rtgs)
         
         # Calculate gradients and perform backward propagation for critic network
         self.critic_optim.zero_grad()    
@@ -117,13 +112,15 @@ class PPO:
         self.logger['actor_losses'].append(actor_loss.detach())
 
       self._log_summary()
+      del batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens
 
       if i_so_far % self.save_freq == 0:
         print("Saving")
-        torch.save(self.actor.state_dict(), './ppo_actor.pth')
-        torch.save(self.critic.state_dict(), './ppo_critic.pth')
+        torch.save(self.actor.state_dict(), './src/PPO/ppo_actor.pth')
+        torch.save(self.critic.state_dict(), './src/PPO/ppo_critic.pth')
 
   def rollout(self):
+    gc.collect()
     # Batch data
     batch_obs = []       # batch operations: (number of timesteps per batch, dimension of observation)
     batch_acts = []      # batch actions: (number of timesteps per batch, dimension of action)
@@ -131,7 +128,6 @@ class PPO:
     batch_rews = []      # batch rewards: (number of episodes, number of timesteps per episode)
     batch_rtgs = []      # batch rewards-to-go: (number of timesteps per batch)
     batch_lens = []      # episodic lengths in batch: (number of episodes)
-
     # Number of timesteps run so far this batch
     t = 0
 
@@ -168,12 +164,12 @@ class PPO:
       batch_rews.append(ep_rews)
 
     # Reshape data as tensors in the shape specified before returning
-    batch_obs = torch.tensor(batch_obs, dtype=torch.float).to(self.device)
+    batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
     batch_acts = torch.tensor(batch_acts, dtype=torch.long).to(self.device)
-    batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float).to(self.device)
+    batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float32).to(self.device)
 
     # ALG STEP #4
-    batch_rtgs = self.compute_rtgs(batch_rews).to(self.device)
+    batch_rtgs = self.compute_rtgs(batch_rews).to(self.device).view(-1)
 
     # Log the episodic returns and episodic lengths in this batch.
     self.logger['batch_rews'] = batch_rews
@@ -248,7 +244,8 @@ class PPO:
     i_so_far = self.logger['i_so_far']
     avg_ep_lens = np.mean(self.logger['batch_lens'])
     avg_ep_rews = np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])
-    avg_actor_loss = np.mean([losses.float().mean() for losses in self.logger['actor_losses']])
+    print(self.logger['actor_losses'])
+    avg_actor_loss = np.mean([losses.float().mean().cpu().item() for losses in self.logger['actor_losses']])
 
     # Round decimal places for more aesthetic logging messages
     avg_ep_lens = str(round(avg_ep_lens, 2))
