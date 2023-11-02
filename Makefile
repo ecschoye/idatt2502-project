@@ -2,11 +2,11 @@ VENV_NAME = venv
 REQUIREMENTS_FILE = requirements.txt
 PYTHON ?= python3
 ifeq ($(OS),Windows_NT)
-    VENV_PATH = $(VENV_NAME)\Scripts\actiavte
+    VENV_PATH = $(VENV_NAME)\Scripts
     RMDIR = rmdir /s /q
     PIP = pip
 else
-    VENV_PATH = source $(VENV_NAME)/bin/activate
+    VENV_PATH = source $(VENV_NAME)/bin
     RMDIR = rm -rf
 	PIP = pip3
 endif
@@ -14,11 +14,22 @@ endif
 .PHONY: setup
 setup:
 	$(PYTHON) -m venv $(VENV_NAME) && \
-	$(PIP) install -r $(REQUIREMENTS_FILE)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
+	$(PIP) install -r $(REQUIREMENTS_FILE) && \
+	$(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 .PHONY: clean
 clean:
 	$(RMDIR) $(VENV_NAME)
+
+.PHONY: imports
+imports:
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
+    $(PIP) install -e .
 
 .PHONY: format
 format: ## Format code and imports
