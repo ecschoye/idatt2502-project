@@ -1,9 +1,13 @@
 import torch
+import evaluate
 from environment import create_mario_env
 from network import DiscreteActorCriticNN
 from ppo import PPO
 import evaluate
+torch.autograd.set_detect_anomaly(True)
 
+ACTOR_PATH  = './src/PPO/ppo_actor.pth'
+CRITIC_PATH = './src/PPO/ppo_critic.pth'
 STRINGS = {
   'menu': """
     Welcome to Proximal Policy Main
@@ -25,14 +29,14 @@ def main():
   env = create_mario_env()
 
   print(STRINGS['menu'], flush=True)
-  choice = int(input("Enter a number:"))
+  choice = int(input("Enter a number:")) 
 
   if choice == 1:
     train(env, '', '')
   elif choice == 2:
-    train(env, 'ppo_actor.pth', 'ppo_critic.pth')
+    train(env, ACTOR_PATH, CRITIC_PATH)
   elif choice == 3: 
-    test(env, 'ppo_actor.pth', 'ppo_critic.pth')  
+    test(env, ACTOR_PATH, CRITIC_PATH)  
 
 def train(env, actor_model, critic_model): 
   model = PPO(env)
@@ -45,20 +49,20 @@ def train(env, actor_model, critic_model):
   else:
     print(STRINGS['from_scratch'], flush=True)
 
-  model.learn(total_timesteps=30_000)
+  model.learn(total_timesteps=2_000_000)
 
 def test(env, actor_model, critic_model):
   print(STRINGS['testing'], flush=True)
 
   # Extract out dimensions of observation and action spaces
-  obs_dim = env.observation_space.shape[0]
-  act_dim = env.action_space.shape[0]
-
+  obs_dim = env.observation_space.shape
+  act_dim = env.action_space.n
+  env.metadata['render_modes'] = None
   # Build our policy the same way we build our actor model in PPO
   # Load in the actor model saved by the PPO algorithm
   policy = DiscreteActorCriticNN(obs_dim, act_dim)
   policy.load_state_dict(torch.load(actor_model))
 
-  evaluate(policy, env, render=True)
+  evaluate.evaluate(policy, env, render=True)
 
 main()
