@@ -26,6 +26,7 @@ class FrameSkipWrapper(gym.Wrapper):
             if(done):
                 break
         obs = np.max(np.stack(self.buffer), axis=0)
+        self.frame = obs.copy()
         return obs, total_reward, done, info
 
 class DownsampleAndGreyscale(gym.ObservationWrapper):

@@ -118,8 +118,8 @@ def train_mario(log = False):
                 "train/steps" : steps,
                 "train/reward_per_step" : total_reward / steps,
             })
-            logger.log_frames(frames)
     if log:
+        logger.log_frames(frames)
         logger.finish()
     agent.save()
     env.close()
