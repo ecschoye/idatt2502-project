@@ -40,18 +40,18 @@ class ReplayBuffer:
     def save(self):
         dir_path = "../replay_buffer_data"
         os.makedirs(dir_path, exist_ok=True)
-        torch.save(self.states, os.path.join(dir_path, 'states.pt'))
-        torch.save(self.actions, os.path.join(dir_path, 'actions.pt'))
-        torch.save(self.rewards, os.path.join(dir_path, 'rewards.pt'))
-        torch.save(self.next_states, os.path.join(dir_path, 'next_states.pt'))
-        torch.save(self.done_flags, os.path.join(dir_path, 'done_flags.pt'))
+        torch.save(self.states, os.path.join(dir_path, "states.pt"))
+        torch.save(self.actions, os.path.join(dir_path, "actions.pt"))
+        torch.save(self.rewards, os.path.join(dir_path, "rewards.pt"))
+        torch.save(self.next_states, os.path.join(dir_path, "next_states.pt"))
+        torch.save(self.done_flags, os.path.join(dir_path, "done_flags.pt"))
 
     def load(self):
         dir_path = "../replay_buffer_data"
         os.makedirs(dir_path, exist_ok=True)
-        self.states = torch.load(os.path.join(dir_path, 'states.pt'))
-        self.actions = torch.load(os.path.join(dir_path, 'actions.pt'))
-        self.rewards = torch.load(os.path.join(dir_path, 'rewards.pt'))
-        self.next_states = torch.load(os.path.join(dir_path, 'next_states.pt'))
-        self.done_flags = torch.load(os.path.join(dir_path, 'done_flags.pt'))
+        self.states = torch.load(os.path.join(dir_path, "states.pt"))
+        self.actions = torch.load(os.path.join(dir_path, "actions.pt"))
+        self.rewards = torch.load(os.path.join(dir_path, "rewards.pt"))
+        self.next_states = torch.load(os.path.join(dir_path, "next_states.pt"))
+        self.done_flags = torch.load(os.path.join(dir_path, "done_flags.pt"))
         self.counter = self.states.shape[0]

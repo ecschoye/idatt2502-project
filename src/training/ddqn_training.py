@@ -1,6 +1,7 @@
 from src.agent.ddqn_agent import DDQNAgent
 from src.environment import create_mario_env
 
+
 def run_mario():
     print("Creating environment")
     env = create_mario_env()
@@ -16,6 +17,7 @@ def run_mario():
 
     agent.save()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print("Starting training")
     run_mario()
