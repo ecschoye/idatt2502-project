@@ -12,20 +12,27 @@ else
 endif
 
 .PHONY: setup
-setup:
+setup: # Makes virtual envoirement and installs requirements
 	$(PYTHON) -m venv $(VENV_NAME) && \
 	cd $(VENV_PATH) && \
 	activate && \
 	cd .. && cd .. && \
-	$(PIP) install -r $(REQUIREMENTS_FILE) && \
+	$(PIP) install -r $(REQUIREMENTS_FILE)
+ifeq ($(OS),Windows_NT)
 	$(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+endif
+ifneq ($(OS),Windows_NT)
+ifneq ($(findstring Darwin,$(shell uname)),Darwin)
+	$(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+endif
+endif
 
 .PHONY: clean
-clean:
+clean: # Removes Virtual envoirement
 	$(RMDIR) $(VENV_NAME)
 
 .PHONY: imports
-imports:
+imports: # To fix import issue
 	cd $(VENV_PATH) && \
 	activate && \
 	cd .. && cd .. && \
