@@ -23,4 +23,4 @@ jobs:
       - name: Lint with flake8
         run: |
           cd $GITHUB_WORKSPACE 
-          flake8 src --max-line-length 87
+          flake8 src --max-line-length 88

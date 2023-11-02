@@ -13,8 +13,8 @@ from torch.optim import Adam
 class PPO:
     def __init__(self, env):
         # Make sure the environment is compatible with our code
-        assert type(env.observation_space) == gym.spaces.Box
-        assert type(env.action_space) == gym.spaces.Discrete
+        assert type(env.observation_space) is gym.spaces.Box
+        assert type(env.action_space) is gym.spaces.Discrete
 
         self._init_hyperparameters()
         # Extract environment information
@@ -110,7 +110,8 @@ class PPO:
 
                 critic_loss = nn.MSELoss()(V, batch_rtgs)
 
-                # Calculate gradients and perform backward propagation for critic network
+                # Calculate gradients 
+                # and perform backward propagation for critic network
                 self.critic_optim.zero_grad()
                 critic_loss.backward()
                 self.critic_optim.step()
@@ -253,8 +254,10 @@ class PPO:
         Return:
           None
         """
-        # Calculate logging values. I use a few python shortcuts to calculate each value
-        # without explaining since it's not too important to PPO; feel free to look it over,
+        # Calculate logging values. 
+        # I use a few python shortcuts to calculate each value
+        # without explaining since it's not too important to PPO;
+        # feel free to look it over,
         # and if you have any questions you can email me (look at bottom of README)
         delta_t = self.logger["delta_t"]
         self.logger["delta_t"] = time.time_ns()
