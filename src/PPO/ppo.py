@@ -110,7 +110,7 @@ class PPO:
 
                 critic_loss = nn.MSELoss()(V, batch_rtgs)
 
-                # Calculate gradients 
+                # Calculate gradients
                 # and perform backward propagation for critic network
                 self.critic_optim.zero_grad()
                 critic_loss.backward()
@@ -254,7 +254,7 @@ class PPO:
         Return:
           None
         """
-        # Calculate logging values. 
+        # Calculate logging values.
         # I use a few python shortcuts to calculate each value
         # without explaining since it's not too important to PPO;
         # feel free to look it over,
