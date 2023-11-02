@@ -11,14 +11,14 @@ from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
 def train_mario(log = False):
     print("Creating environment")
-    env = create_mario_env()
+    env = create_mario_env("SuperMarioBros-1-1-v0")
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
     agent = DDQNAgent(env, state_space, action_space)
 
 
-    num_episodes = 10
+    num_episodes = 200
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
@@ -49,7 +49,10 @@ def train_mario(log = False):
         # print("State shape in train_mario:", state.shape)
         total_reward = 0
         steps = 0
+        reward_per_step = 0
         while True:
+            if episode % 10 == 0:
+                env.render()
             # print("State shape before agent.act:", state.shape)
             action = agent.act(state)
             steps += 1
@@ -81,7 +84,7 @@ def train_mario(log = False):
             if agent.epsilon > 0.05:
                 if total_reward > prev_reward and episode > int(0.1 * num_episodes):
                     agent.epsilon = math.pow(agent.epsilon_decay,
-                                             episode - int(0.1 * num_episodes))
+                                             episode - int(0.05 * num_episodes))
             else:
                 agent.update_epsilon()
 
@@ -89,12 +92,11 @@ def train_mario(log = False):
 
         total_rewards.append(reward)
         if episode % 10 == 0:
-            env.render()
             tqdm.write("Episode: {}, Reward: {}, Max Reward: {}, Epsilon: {}, Steps: {}, Flags: {}".format(episode,
                                                                                                            total_reward,
                                                                                                            max_episode_reward,
                                                                                                            agent.epsilon,
-                                                                                                           steps,
+                                                                                                           agent.steps,
                                                                                                            flags)
             )
             agent.save()
@@ -103,7 +105,8 @@ def train_mario(log = False):
                 "train/reward" : total_reward,
                 "train/max_episode_reward" : max_episode_reward,
                 "train/epsilon" : agent.epsilon,
-                "train/steps" : steps
+                "train/steps" : steps,
+                "train/reward_per_step" : total_reward / steps,
             })
     if log:
         logger.finish()
@@ -147,7 +150,7 @@ def log_model_version():
     action_space = env.action_space.n
     agent = DDQNAgent(env, state_space, action_space)
     agent.load()
-    num_episodes = 10000
+    num_episodes = 100
     logger = NeptuneModels()
     logger.model_version(
         "MARIO-DDQN",
