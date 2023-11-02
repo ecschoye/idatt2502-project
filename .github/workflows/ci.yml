@@ -21,4 +21,6 @@ jobs:
           pip install flake8
 
       - name: Lint with flake8
-        run: flake8 app --max-line-length 87
+        run: |
+          cd $GITHUB_WORKSPACE 
+          flake8 app --max-line-length 87
