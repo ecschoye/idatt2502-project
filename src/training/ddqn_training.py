@@ -1,6 +1,5 @@
 import math
 import time
-
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -8,10 +7,9 @@ from tqdm import tqdm
 from src.agent.ddqn_agent import DDQNAgent
 from src.environment import create_mario_env
 from src.utils.replay_buffer import ReplayBuffer
-from src.neptune_wrapper import NeptuneModels
+from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
-
-def train_mario():
+def train_mario(log = False):
     print("Creating environment")
     env = create_mario_env()
     state_space = env.observation_space.shape
@@ -19,17 +17,32 @@ def train_mario():
 
     agent = DDQNAgent(env, state_space, action_space)
 
-    logger = NeptuneModels()
-    #logger.create_model("DDQN", "DDQN")
 
-
-    num_episodes = 1000
+    num_episodes = 10
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
     flags = 0
     done = False
     prev_reward = 0
+    #init logger with proper params
+    if log:
+        logger = NeptuneRun(params = {
+                "gamma": agent.gamma,
+                "epsilon": agent.epsilon,
+                "epsilon_min": agent.epsilon_min,
+                "epsilon_decay": agent.epsilon_decay,
+                "learning_rate": agent.lr,
+                "batch_size": agent.batch_size,
+                "memory_size": agent.memory_size,
+                "copy": agent.copy,
+                "action_space": agent.action_space,
+                "state_space": agent.state_space,
+                "num_episodes": num_episodes,
+            },
+            description="DDQN training run",
+            tags = ["DDQN"]
+            )
     for episode in tqdm(range(num_episodes)):
         state = env.reset()
         state = torch.tensor(np.array([state]))
@@ -82,27 +95,19 @@ def train_mario():
                                                                                                            max_episode_reward,
                                                                                                            agent.epsilon,
                                                                                                            steps,
-                                                                                                           flags))
+                                                                                                           flags)
+            )
             agent.save()
-
+        if log:
+            logger.log_epoch({
+                "train/reward" : total_reward,
+                "train/max_episode_reward" : max_episode_reward,
+                "train/epsilon" : agent.epsilon,
+                "train/steps" : steps
+            })
+    if log:
+        logger.finish()
     agent.save()
-    logger.model_version(
-        "MARIO-DDQN",
-        {
-            "gamma": agent.gamma,
-            "epsilon": agent.epsilon,
-            "epsilon_min": agent.epsilon_min,
-            "epsilon_decay": agent.epsilon_decay,
-            "learning_rate": agent.lr,
-            "batch_size": agent.batch_size,
-            "memory_size": agent.memory_size,
-            "copy": agent.copy,
-            "action_space": agent.action_space,
-            "state_space": agent.state_space,
-            "num_episodes": num_episodes,
-        },
-        ["../trained_model", "../replay_buffer_data"]
-    )
     env.close()
 
 
@@ -136,7 +141,7 @@ def render_mario():
 
     env.close()
 
-def log():
+def log_model_version():
     env = create_mario_env()
     state_space = env.observation_space.shape
     action_space = env.action_space.n
@@ -164,6 +169,6 @@ def log():
 
 if __name__ == '__main__':
     print("Starting training")
-    train_mario()
+    train_mario(log = True)
     #render_mario()
     #log()

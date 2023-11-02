@@ -125,4 +125,5 @@ venv
 .mypy_cache/
 
 .idea
-
+.neptune
+setup.py

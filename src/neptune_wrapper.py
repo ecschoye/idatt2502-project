@@ -62,10 +62,12 @@ class NeptuneRun:
     Wrapper class for interacting with neptune.ai API. Should be reinitialized
     """
 
-    def __init__(self, params):
+    def __init__(self, params, description = "", tags = []):
         self.run = neptune.init_run(
             project=NEPTUNE_PROJECT,
             api_token=NEPTUNE_API_KEY,
+            description = description,
+            tags = tags
         )  # your credentials
         self.params = params
         self.run["parameters"] = self.params
