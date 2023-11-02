@@ -1,6 +1,5 @@
 import gc
 import time
-
 import gym
 import numpy as np
 import torch
@@ -91,6 +90,13 @@ class PPO:
             A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
 
             for _ in range(self.n_updates_per_iteration):
+                # Introducing dynamic learining rate that decreases as the training advances
+                frac = (t_so_far - 1.0) / total_timesteps
+                new_lr = self.lr * (1.0 - frac)
+                new_lr = max(new_lr, 0.000001)
+                self.actor_optim.param_groups[0]["lr"] = new_lr 
+                self.critic_optim.param_groups[0]["lr"] = new_lr   
+
                 # Calculate pi_theta(a_t | s_t)
                 V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
 
