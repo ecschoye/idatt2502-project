@@ -46,17 +46,19 @@ class PPO:
 
     def _init_hyperparameters(self):
         # Default values for hyperparameters, will need to change later.
-        self.timesteps_per_batch = 10000  # timesteps per batch
-        self.max_timesteps_per_episode = 1000  # timesteps per episode
+        self.timesteps_per_batch = 5000   # timesteps per batch
+        self.max_timesteps_per_episode = 8000  # timesteps per episode
+        
+        self.gamma = 0.98                 # Discount factor    
+        self.n_updates_per_iteration = 5  # number of updates per iteration
+        self.clip = 0.2                   # Recommended
+        self.lr = 0.005                   # Learning rate
+        self.num_minibatches = 6          # K in the paper
+        self.ent_coef = 0.01              # Entropy coefficient, higher penalizes overdeterministic policies 
 
-        self.gamma = 0.99
-        self.n_updates_per_iteration = 10  # number of updates per iteration
-        self.clip = 0.2  # Recommended
-        self.lr = 0.001  # Learning rate
-
-        self.save_freq = 4  # How often we save in number of iterations
-        self.render = True
-        self.render_every_i = 1
+        self.save_freq = 1  # How often we save in number of iterations
+        self.render = True  # If we should render during rollout    
+        self.render_every_i = 1 # Only render every i iterations
 
     def learn(self, total_timesteps):
         print("Starting learning process")
@@ -83,12 +85,16 @@ class PPO:
             self.logger["i_so_far"] = i_so_far
 
             # Calculate V_{phi, k}
-            V, _ = self.evaluate(batch_obs, batch_acts)
+            V, _, _ = self.evaluate(batch_obs, batch_acts)
             A_k = batch_rtgs - V.detach()
 
             # Normalize advantages
             A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
 
+            step = batch_obs.size(0) # Number of samples in batch
+            inds = np.arange(step)   # Indices to shuffle array
+            minibatch_size = step // self.num_minibatches 
+            loss = []
             for _ in range(self.n_updates_per_iteration):
                 # Introducing dynamic learining rate that decreases as the training advances
                 frac = (t_so_far - 1.0) / total_timesteps
@@ -97,33 +103,41 @@ class PPO:
                 self.actor_optim.param_groups[0]["lr"] = new_lr 
                 self.critic_optim.param_groups[0]["lr"] = new_lr   
 
-                # Calculate pi_theta(a_t | s_t)
-                V, curr_log_probs = self.evaluate(batch_obs, batch_acts)
+                np.random.shuffle(inds)
+                for start in range(0, step, minibatch_size):
+                    end = start + minibatch_size
+                    idx = inds[start:end] # Indices for batch samples
+                    mini_obs = batch_obs[idx]
+                    mini_acts = batch_acts[idx]
+                    mini_log_probs = batch_log_probs[idx]
+                    mini_advantage = A_k[idx]
+                    mini_rtgs = batch_rtgs[idx]
+                    V, curr_log_probs, entropy = self.evaluate(mini_obs, mini_acts) # Calculate pi_theta(a_t | s_t)
+                    logratios = curr_log_probs - mini_log_probs
+                    ratios = torch.exp(logratios) # Calculate ratios
+                    surr1 = ratios * mini_advantage # Calculate surrogate losses
+                    surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * mini_advantage
+                    actor_loss = (-torch.min(surr1, surr2)).mean()
+                    entropy_loss = entropy.mean()
+                    actor_loss = actor_loss - self.ent_coef * entropy_loss
+                    critic_loss = nn.MSELoss()(V, mini_rtgs)
 
-                # Calculate ratios
-                ratios = torch.exp(curr_log_probs - batch_log_probs)
+                    # Calculate gradients and perform backward propagation for actor network
+                    self.actor_optim.zero_grad()
+                    actor_loss.backward(retain_graph=True)
+                    self.actor_optim.step()
 
-                # Calculate surrogate losses
-                surr1 = ratios * A_k
-                surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * A_k
+                    # Calculate gradients 
+                    # and perform backward propagation for critic network
+                    self.critic_optim.zero_grad()
+                    critic_loss.backward()
+                    self.critic_optim.step()
 
-                actor_loss = (-torch.min(surr1, surr2)).mean()
-
-                # Calculate gradients and perform backward propagation for actor network
-                self.actor_optim.zero_grad()
-                actor_loss.backward(retain_graph=True)
-                self.actor_optim.step()
-
-                critic_loss = nn.MSELoss()(V, batch_rtgs)
-
-                # Calculate gradients 
-                # and perform backward propagation for critic network
-                self.critic_optim.zero_grad()
-                critic_loss.backward()
-                self.critic_optim.step()
+                    loss.append(actor_loss.detach())
 
                 # Log actor loss
-                self.logger["actor_losses"].append(actor_loss.detach())
+                avg_loss = sum(loss) / len(loss)
+                self.logger["actor_losses"].append(avg_loss)
 
             self._log_summary()
             del batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens
@@ -240,7 +254,6 @@ class PPO:
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs
         V = self.critic(batch_obs[0]).squeeze()
-
         # Calculate the log probabilities of batch actions using most
         # recent actor network
         # This segment of code is similar to that in get_action()
@@ -248,7 +261,7 @@ class PPO:
         action_dist = Categorical(action_prob)
         log_probs = action_dist.log_prob(batch_acts)
 
-        return V, log_probs
+        return V, log_probs, action_dist.entropy()
 
     def _log_summary(self):
         """
