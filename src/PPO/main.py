@@ -1,14 +1,12 @@
-import evaluate
 import torch
-from network import DiscreteActorCriticNN
+from src.environment import create_mario_env
+from src.PPO.network.network import DiscreteActorCriticNN
+from src.PPO.model.ppo import PPO
+from src.PPO.utils.evaluate import evaluate
+from src.PPO.utils.hyperparameters import hyperparameters
 
-from environment import create_mario_env
-from ppo import PPO
-
-torch.autograd.set_detect_anomaly(True)
-
-ACTOR_PATH = "./src/PPO/ppo_actor.pth"
-CRITIC_PATH = "./src/PPO/ppo_critic.pth"
+ACTOR_PATH = "./src/PPO/network/ppo_actor.pth"
+CRITIC_PATH = "./src/PPO/network/ppo_critic.pth"
 STRINGS = {
     "menu": """
     Welcome to Proximal Policy Main
@@ -42,12 +40,12 @@ def main():
 
 
 def train(env, actor_model, critic_model):
-    model = PPO(env)
+    model = PPO(env, hyperparameters)
 
     if actor_model != "" and critic_model != "":
         print(STRINGS["loading_agents"], flush=True)
-        model.actor.load_state_dict(torch.load(actor_model))
-        model.critic.load_state_dict(torch.load(critic_model))
+        model.actor.load_state_dict(torch.load(actor_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        model.critic.load_state_dict(torch.load(critic_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
         print(STRINGS["loading_success"], flush=True)
     else:
         print(STRINGS["from_scratch"], flush=True)

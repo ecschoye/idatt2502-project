@@ -1,9 +1,9 @@
 import collections
-
 import cv2
 import gym
 import gym_super_mario_bros
 import numpy as np
+from src.neptune_wrapper import NeptuneRun
 from gym.utils.play import play
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
