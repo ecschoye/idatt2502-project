@@ -84,13 +84,15 @@ def train_mario(log = False):
                 if total_reward > max_episode_reward:
                     max_episode_reward = total_reward
                 break
-
-            if agent.epsilon > 0.05:
-                if total_reward > prev_reward and episode > int(0.1 * num_episodes):
-                    agent.epsilon = math.pow(agent.epsilon_decay,
-                                             episode - int(0.05 * num_episodes))
-            else:
-                agent.update_epsilon()
+            
+            
+            ###
+            #if agent.epsilon > 0.05:
+             #   if total_reward > prev_reward and episode > int(0.1 * num_episodes):
+             #       agent.epsilon = math.pow(agent.epsilon_decay,
+             #                                episode - int(0.05 * num_episodes))
+            ###
+            agent.update_epsilon()
 
             prev_reward = total_reward
             if(episode == num_episodes-1):
