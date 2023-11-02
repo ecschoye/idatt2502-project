@@ -7,3 +7,6 @@ tqdm==4.66.1
 python-dotenv
 opencv-python==4.8.1.78
 neptune
+black==21.12b0
+isort==5.10.1
+flake8==4.0.1
