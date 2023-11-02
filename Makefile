@@ -22,12 +22,12 @@ clean:
 
 .PHONY: format
 format: ## Format code and imports
-	@black src
-	@isort src
+	make black
+	make isort
 
 .PHONY: check
 check: ## Check formatting, imports, and linting
-	@black --check src
+	@black --check --line-length 87 src
 	@isort --check-only src
 	@flake8 src
 

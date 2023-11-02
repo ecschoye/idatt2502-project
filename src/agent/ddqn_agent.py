@@ -1,23 +1,34 @@
-import pickle
-import torch
 import numpy as np
+import torch
 import torch.nn as nn
 
 from ..model.dqn import DQN
-from collections import deque
 from ..utils.replay_buffer import ReplayBuffer
 
 
 class DDQNAgent:
-    def __init__(self, env, state_space, action_space, memory_size=10000, batch_size=64, lr=0.001, gamma=0.99,
-                 epsilon=1.0, epsilon_min=0.1, epsilon_decay=0.995, copy=5000, pretrained_path=None):
+    def __init__(
+        self,
+        env,
+        state_space,
+        action_space,
+        memory_size=10000,
+        batch_size=64,
+        lr=0.001,
+        gamma=0.99,
+        epsilon=1.0,
+        epsilon_min=0.1,
+        epsilon_decay=0.995,
+        copy=5000,
+        pretrained_path=None,
+    ):
         # Environment
         self.env = env
         self.state_space = state_space
         self.action_space = action_space
 
         # Device
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if not torch.cuda.is_available():
             print("Warning: CUDA not available, running on CPU.")
 
@@ -82,16 +93,21 @@ class DDQNAgent:
             return
 
         # Sample from memory
-        states, actions, rewards, next_states, done_flags = self.memory.sample(self.batch_size, self.device)
+        states, actions, rewards, next_states, done_flags = self.memory.sample(
+            self.batch_size, self.device
+        )
 
         next_actions = self.target_model(next_states)
         local_action_values = self.local_model(states).gather(1, actions.unsqueeze(-1))
 
         max_next_action_values = self.local_model(next_states).argmax(1)
-        next_best_action_values = next_actions.gather(1, max_next_action_values.unsqueeze(-1))
+        next_best_action_values = next_actions.gather(
+            1, max_next_action_values.unsqueeze(-1)
+        )
 
-        expected_action_values = rewards + torch.mul(self.gamma * next_best_action_values,
-                                                     (1.0 - done_flags.float()))
+        expected_action_values = rewards + torch.mul(
+            self.gamma * next_best_action_values, (1.0 - done_flags.float())
+        )
 
         loss = self.loss(local_action_values, expected_action_values)
         self.train_loss.append(loss.item())

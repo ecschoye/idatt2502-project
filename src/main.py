@@ -1,8 +1,9 @@
 import time
+
 import torch
 
-from model.dqn import DQN
 from environment import create_mario_env
+from model.dqn import DQN
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -14,8 +15,6 @@ model = DQN(input_shape, n_actions).to(device)
 # Load the model
 model.load(device, target=False)  # Set target=True if you saved a target model
 
-
-import gym
 
 env = create_mario_env()
 state = env.reset()
