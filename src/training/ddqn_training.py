@@ -26,6 +26,7 @@ def train_mario(log = False):
     flags = 0
     done = False
     prev_reward = 0
+    frames = []
     #init logger with proper params
     if log:
         logger = NeptuneRun(params = {
@@ -51,6 +52,7 @@ def train_mario(log = False):
         total_reward = 0
         steps = 0
         reward_per_step = 0
+    
         while True:
             if episode % 10 == 0:
                 env.render()
@@ -91,7 +93,8 @@ def train_mario(log = False):
                 agent.update_epsilon()
 
             prev_reward = total_reward
-
+            if(episode == num_episodes-1):
+                frames.append(env.frame)
         total_rewards.append(reward)
         if episode % 10 == 0:
             tqdm.write("Episode: {}, Reward: {}, Max Reward: {}, Epsilon: {}, Steps: {}, Flags: {}".format(episode,
@@ -101,7 +104,7 @@ def train_mario(log = False):
                                                                                                            agent.steps,
                                                                                                            flags)
             )
-            if(log and num_episodes > 100):
+            if(log and num_episodes >= 100):
                 logger.log_epoch({
                     "train/avg_reward_per_10_episodes" : interval_reward/10
                 })
@@ -115,6 +118,7 @@ def train_mario(log = False):
                 "train/steps" : steps,
                 "train/reward_per_step" : total_reward / steps,
             })
+            logger.log_frames(frames)
     if log:
         logger.finish()
     agent.save()
