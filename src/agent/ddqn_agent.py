@@ -73,8 +73,6 @@ class DDQNAgent:
             action_values = self.local_model(torch.tensor(state, dtype=torch.float32, device=self.device))
             action = torch.argmax(action_values).item()
 
-        if self.steps % 1000 == 0:
-            self.update_epsilon()
         self.increment_steps()
 
         return action
