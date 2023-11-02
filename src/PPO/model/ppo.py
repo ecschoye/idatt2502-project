@@ -3,11 +3,11 @@ import time
 import gym
 import numpy as np
 import torch
-from ..network.network import DiscreteActorCriticNN
 from torch import nn
 from torch.distributions import Categorical
 from torch.optim import Adam
-
+from ..network.network import DiscreteActorCriticNN
+from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
 class PPO:
     def __init__(self, env, hyperparameters=None):
@@ -34,6 +34,24 @@ class PPO:
         self.critic_optim = Adam(self.critic.parameters(), lr=self.lr)
 
         # Logger
+        if hyperparameters.get("log", False):
+            self.neptune_logger = NeptuneRun(
+                params = {
+                    "gamma": self.gamma,
+                    "n_updates_per_iteration": self.n_updates_per_iteration,
+                    "clip": self.clip,
+                    "lr": self.lr,
+                    "num_minibatches": self.num_minibatches,
+                    "lam": self.lam,
+                    "ent_coef": self.ent_coef,
+                    "max_grad_norm": self.max_grad_norm,
+                    "target_kl": self.target_kl,
+                    "timesteps_per_batch": self.timesteps_per_batch,
+                    "max_timesteps_per_episode": self.max_timesteps_per_episode,
+                },
+                description="PPO Test Run",
+                tags=["PPO"]
+                )
         self.logger = {
             "delta_t": time.time_ns(),
             "t_so_far": 0,  # timesteps so far
@@ -68,6 +86,7 @@ class PPO:
         self.render = True  # If we should render during rollout 
         self.full_render = False # Watch full training   
         self.render_every_i = 1 # Only render every i iterations
+        self.log = False #If we push logs to Neptune
 
         """ 
             Update passed hyperparameters 
@@ -75,6 +94,15 @@ class PPO:
         if hyperparameters is not None:
             for param, val in hyperparameters.items():
                 exec ("self." + param + " = " + str(val))
+
+    def run(self, total_timesteps): 
+        try: 
+            self.learn(total_timesteps)
+        except KeyboardInterrupt:
+            print("Shutting down")
+        finally:
+            if self.log:
+                self.neptune_logger.finish()    
 
     def learn(self, total_timesteps):
         """
@@ -180,13 +208,19 @@ class PPO:
             avg_loss = sum(loss) / len(loss)
             self.logger["actor_losses"].append(avg_loss)
 
-            self._log_summary()
+            # Push run to Neptune if log = True
+            if self.log: 
+                self.log_epoch()
+            self._print_summary()
+
             del batch_obs, batch_acts, batch_log_probs, batch_rews, batch_lens, batch_vals, batch_dones
 
             if i_so_far % self.save_freq == 0:
                 print("Saving")
                 torch.save(self.actor.state_dict(), "./src/PPO/network/ppo_actor.pth")
                 torch.save(self.critic.state_dict(), "./src/PPO/network/ppo_critic.pth")
+        if self.log: 
+            self.neptune_logger.finish()
 
     def rollout(self):
         gc.collect()
@@ -321,7 +355,8 @@ class PPO:
 
         return V, log_probs, action_dist.entropy()
 
-    def _log_summary(self):
+    def _print_summary(self):
+
         # Calculate logging values. I use a few python shortcuts to calculate each value
         # without explaining since it's not too important to PPO; feel free to look it over,
         # and if you have any questions you can email me (look at bottom of README)
@@ -359,3 +394,14 @@ class PPO:
         self.logger['batch_lens'] = []
         self.logger['batch_rews'] = []
         self.logger['actor_losses'] = []
+
+    def log_epoch(self):
+        self.neptune_logger.log_epoch({
+            "train/iteration_numer": self.logger['i_so_far'],
+            "train/average_episodic_length": np.mean(self.logger['batch_lens']),
+            "train/average_episodic_return": np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']]),
+            "train/average_loss": np.mean([losses.float().mean() for losses in self.logger['actor_losses']]),
+            "train/timesteps_so_far": self.logger['t_so_far'],
+            "train/time_consumed": round((time.time_ns()-self.logger['delta_t']) / 1e9, 2),
+            "train/learning_rate": self.logger['lr'],
+        })

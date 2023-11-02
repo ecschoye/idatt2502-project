@@ -50,7 +50,8 @@ def train(env, actor_model, critic_model):
     else:
         print(STRINGS["from_scratch"], flush=True)
 
-    model.learn(total_timesteps=2_000_000)
+    model.run(total_timesteps=5_000)
+    env.close()
 
 
 def test(env, actor_model, critic_model):
@@ -66,6 +67,7 @@ def test(env, actor_model, critic_model):
     policy.load_state_dict(torch.load(actor_model))
 
     evaluate.evaluate(policy, env, render=True)
+    env.close()
 
 
 main()

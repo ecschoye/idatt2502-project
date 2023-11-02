@@ -2,8 +2,8 @@
 
 hyperparameters = {
     # Run
-    "timesteps_per_batch": 10000,   # timesteps per batch
-    "max_timesteps_per_episode": 1200,  # timesteps per episode
+    "timesteps_per_batch": 1200,   # timesteps per batch
+    "max_timesteps_per_episode": 400,  # timesteps per episode
         
     # Algorithm
     "gamma": 0.98,                 # Discount factor    
@@ -20,5 +20,6 @@ hyperparameters = {
     "save_freq": 1,  # How often we save in number of iterations
     "render": True,  # If we should render during rollout 
     "full_render": False, # Watch full training   
-    "render_every_i": 1  # Only render every i iterations
+    "render_every_i": 1,  # Only render every i iterations
+    "log": True # If we push logs to neptune
 }
