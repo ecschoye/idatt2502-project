@@ -47,7 +47,7 @@ class PPO:
     def _init_hyperparameters(self):
         # Default values for hyperparameters, will need to change later.
         self.timesteps_per_batch = 5000   # timesteps per batch
-        self.max_timesteps_per_episode = 8000  # timesteps per episode
+        self.max_timesteps_per_episode = 800  # timesteps per episode
         
         self.gamma = 0.98                 # Discount factor    
         self.n_updates_per_iteration = 5  # number of updates per iteration
@@ -55,6 +55,8 @@ class PPO:
         self.lr = 0.005                   # Learning rate
         self.num_minibatches = 6          # K in the paper
         self.ent_coef = 0.01              # Entropy coefficient, higher penalizes overdeterministic policies 
+        self.max_grad_norm = 0.5          # Gradient clipping threshold
+        self.target_kl = 0.02            # Target KL-divergence
 
         self.save_freq = 1  # How often we save in number of iterations
         self.render = True  # If we should render during rollout    
@@ -112,9 +114,13 @@ class PPO:
                     mini_log_probs = batch_log_probs[idx]
                     mini_advantage = A_k[idx]
                     mini_rtgs = batch_rtgs[idx]
+
                     V, curr_log_probs, entropy = self.evaluate(mini_obs, mini_acts) # Calculate pi_theta(a_t | s_t)
+
                     logratios = curr_log_probs - mini_log_probs
                     ratios = torch.exp(logratios) # Calculate ratios
+                    approx_kl = ((ratios - 1) ** logratios).mean() # Calculate approximated KL-divergence
+
                     surr1 = ratios * mini_advantage # Calculate surrogate losses
                     surr2 = torch.clamp(ratios, 1 - self.clip, 1 + self.clip) * mini_advantage
                     actor_loss = (-torch.min(surr1, surr2)).mean()
@@ -125,19 +131,25 @@ class PPO:
                     # Calculate gradients and perform backward propagation for actor network
                     self.actor_optim.zero_grad()
                     actor_loss.backward(retain_graph=True)
+                    nn.utils.clip_grad_norm_(self.actor.parameters(), self.max_grad_norm)
                     self.actor_optim.step()
 
                     # Calculate gradients 
                     # and perform backward propagation for critic network
                     self.critic_optim.zero_grad()
                     critic_loss.backward()
+                    nn.utils.clip_grad_norm(self.critic.parameters(), self.max_grad_norm)
                     self.critic_optim.step()
 
                     loss.append(actor_loss.detach())
+                
+                # Approximating KL divergence
+                if approx_kl > self.target_kl: 
+                    break
 
-                # Log actor loss
-                avg_loss = sum(loss) / len(loss)
-                self.logger["actor_losses"].append(avg_loss)
+            # Log actor loss
+            avg_loss = sum(loss) / len(loss)
+            self.logger["actor_losses"].append(avg_loss)
 
             self._log_summary()
             del batch_obs, batch_acts, batch_log_probs, batch_rtgs, batch_lens
