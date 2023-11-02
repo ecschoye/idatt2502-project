@@ -22,6 +22,7 @@ def train_mario(log = False):
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
+    interval_reward = 0
     flags = 0
     done = False
     prev_reward = 0
@@ -60,6 +61,7 @@ def train_mario(log = False):
             next_state, reward, done, info = env.step(action)
             #reward = get_reward(done, steps, reward, env)
             total_reward += reward
+            interval_reward += reward
             next_state = torch.tensor(np.array([next_state]))
             # print("Next state shape:", next_state.shape)
             reward = torch.tensor([reward], dtype=torch.float).unsqueeze(0)
@@ -99,6 +101,11 @@ def train_mario(log = False):
                                                                                                            agent.steps,
                                                                                                            flags)
             )
+            if(log and num_episodes > 100):
+                logger.log_epoch({
+                    "train/avg_reward_per_10_episodes" : interval_reward/10
+                })
+            interval_reward = 0
             agent.save()
         if log:
             logger.log_epoch({
