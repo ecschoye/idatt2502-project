@@ -27,9 +27,9 @@ format: ## Format code and imports
 
 .PHONY: check
 check: ## Check formatting, imports, and linting
-	@black --check --line-length 88 src
+	@black --check src
 	@isort --check-only src
-	@flake8 src
+	@flake8 --max-line-length 88 src
 
 .PHONY: black
 black: ## Format code only
