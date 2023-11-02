@@ -1,6 +1,6 @@
 import torch
 import evaluate
-from environment import create_mario_env
+from src.environment import create_mario_env
 from network import DiscreteActorCriticNN
 from ppo import PPO
 import evaluate

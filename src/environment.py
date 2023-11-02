@@ -6,7 +6,7 @@ import gym
 import cv2
 import collections
 import numpy as np
-from neptune_wrapper import NeptuneRun
+from src.neptune_wrapper import NeptuneRun
 
 class FrameSkipWrapper(gym.Wrapper):
     """
