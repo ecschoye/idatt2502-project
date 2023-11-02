@@ -103,7 +103,7 @@ def train_mario(log = False):
                                                                                                            total_reward,
                                                                                                            max_episode_reward,
                                                                                                            agent.epsilon,
-                                                                                                           agent.steps,
+                                                                                                           steps,
                                                                                                            flags)
             )
             if(log and num_episodes >= 100):
