@@ -65,7 +65,8 @@ class PPO:
 
         # Misc
         self.save_freq = 1  # How often we save in number of iterations
-        self.render = True  # If we should render during rollout    
+        self.render = True  # If we should render during rollout 
+        self.full_render = False # Watch full training   
         self.render_every_i = 1 # Only render every i iterations
 
         """ 
@@ -184,8 +185,8 @@ class PPO:
 
             if i_so_far % self.save_freq == 0:
                 print("Saving")
-                torch.save(self.actor.state_dict(), "./src/PPO/ppo_actor.pth")
-                torch.save(self.critic.state_dict(), "./src/PPO/ppo_critic.pth")
+                torch.save(self.actor.state_dict(), "./src/PPO/network/ppo_actor.pth")
+                torch.save(self.critic.state_dict(), "./src/PPO/network/ppo_critic.pth")
 
     def rollout(self):
         gc.collect()
@@ -228,9 +229,11 @@ class PPO:
 
             for ep_t in range(self.max_timesteps_per_episode):
                 if ( # Render conditions 
-                    self.render
-                    and (self.logger["i_so_far"] % self.render_every_i == 0)
-                    and len(batch_lens) == 0
+                    self.full_render or (
+                        self.render
+                        and (self.logger["i_so_far"] % self.render_every_i == 0)
+                        and len(batch_lens) == 0
+                    )
                 ):self.env.render()
 
                 ep_dones.append(done)
