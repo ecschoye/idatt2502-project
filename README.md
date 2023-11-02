@@ -15,10 +15,12 @@ We chose to try a hardcore envoirement, and the envoirement we ended up with was
 Read more about the envoirement here: https://pypi.org/project/gym-super-mario-bros/
 
 ## Problems statement
-FILL IN FINAL PROBLEM STATEMENT
+# ---- FILL IN FINAL PROBLEM STATEMENT ---REMOVE WHEN FINISHED
 
 ## Requirements
-Here are the requirements to run the project
+Here are the requirements to run the project:
+- Python >= 3.10.8
+- Preferably Make (For a easier setup of project)
 
 ## How to run
 The commands used for the project assumes that you have Make installed. If you don't have it, you will find the commands you need in the Makefile
@@ -43,7 +45,24 @@ make imports
 ```
 
 ### Run
-FILL IN HOW TO RUN BOTH PPO AND DDQN 
+Make sure that you use the virtueal envoirement created in the setup section.
+#### To activate the envoirement in commandline:
+- Windows:
+``` bash
+cd venv/scripts && activate && cd .. && cd ..
+```
+- Other:
+```bash
+cd venv/bin && activate && cd .. && cd ..
+```
+
+#### Deactivate the envoirement with:
+``` bash
+deactivate
+```
+
+# --- FILL IN HOW TO RUN BOTH PPO AND DDQN -- REMOVE WHEN FINISHED
+Run the main.py file with the args ddqn or ppo...
 
 ### Cleanup
 This commands removes the virtual envoirment created in the setup section. You can also remove this manually.
