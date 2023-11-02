@@ -1,9 +1,8 @@
-import evaluate
 import torch
-import evaluate
 from src.environment import create_mario_env
-from network import DiscreteActorCriticNN
-from ppo import PPO
+from src.PPO.network.network import DiscreteActorCriticNN
+from src.PPO.model.ppo import PPO
+from src.PPO.utils.evaluate import evaluate
 
 torch.autograd.set_detect_anomaly(True)
 

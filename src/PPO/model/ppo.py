@@ -3,7 +3,7 @@ import time
 import gym
 import numpy as np
 import torch
-from network import DiscreteActorCriticNN
+from ..network.network import DiscreteActorCriticNN
 from torch import nn
 from torch.distributions import Categorical
 from torch.optim import Adam
