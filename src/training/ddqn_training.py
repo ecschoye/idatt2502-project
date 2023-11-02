@@ -92,7 +92,7 @@ def train_mario(log = False):
              #       agent.epsilon = math.pow(agent.epsilon_decay,
              #                                episode - int(0.05 * num_episodes))
             ###
-            agent.update_epsilon()
+        
 
             prev_reward = total_reward
             if(episode == num_episodes-1):
@@ -120,6 +120,7 @@ def train_mario(log = False):
                 "train/steps" : steps,
                 "train/reward_per_step" : total_reward / steps,
             })
+        agent.update_epsilon()
     if log:
         logger.log_frames(frames)
         logger.finish()
