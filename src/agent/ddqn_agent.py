@@ -1,3 +1,4 @@
+import math
 import pickle
 import random
 
@@ -12,7 +13,20 @@ from ..utils.replay_buffer import ReplayBuffer
 
 
 class DDQNAgent:
-    def __init__(self, env, state_space, action_space, memory_size=20000, batch_size=32, lr=0.00025, gamma=0.90, epsilon=1.0, epsilon_min=0.01, epsilon_decay=10**5, copy=5000, pretrained_path=None):
+    def __init__(self,
+                 env,
+                 state_space,
+                 action_space,
+                 memory_size=20000,
+                 batch_size=32,
+                 lr=0.00025,
+                 gamma=0.90,
+                 epsilon=1.0,
+                 epsilon_min=0.01,
+                 epsilon_decay=10**5,
+                 copy=5000,
+                 pretrained_path=None
+                 ):
         # Environment
         self.env = env
         self.state_space = state_space
@@ -45,14 +59,13 @@ class DDQNAgent:
         # Load pretrained model
         self.pretrained_path = pretrained_path
         if self.pretrained_path is not None:
-            self.local_model.load(self.device, self.pretrained_path)
-            self.target_model.load(self.device, self.pretrained_path)
+            self.local_model.load(self.device)
+            self.target_model.load(self.device, True)
 
         # Optimizer and loss
         self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.lr, eps=1e-4)
         self.loss = nn.SmoothL1Loss().to(self.device)
 
-        self.steps = 0
         self.train_loss = []
         self.reward_history = []
 
@@ -67,7 +80,7 @@ class DDQNAgent:
         return torch.argmax(self.local_model(state.to(self.device))).unsqueeze(0).unsqueeze(0).cpu()
 
     def act(self, state):
-        #print("State shape in act:", state.shape)
+        # print("State shape in act:", state.shape)
         # Epsilon-greedy action selection
         if random.random() <= self.epsilon:
             action = np.random.randint(self.action_space)
@@ -111,7 +124,7 @@ class DDQNAgent:
 
     def save(self):
         self.local_model.save()
-        self.target_model.save()
+        self.target_model.save(True)
         self.memory.save()
 
     def load(self):

@@ -7,7 +7,7 @@ from src.environment import create_mario_env
 from src.utils.replay_buffer import ReplayBuffer
 from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
-def train_mario(log = False):
+def train_mario(pretrained = False, log = False):
     print("Creating environment")
     env = create_mario_env("SuperMarioBros-1-1-v0")
     state_space = env.observation_space.shape
@@ -15,8 +15,10 @@ def train_mario(log = False):
 
     agent = DDQNAgent(env, state_space, action_space)
 
+    if pretrained:
+        agent.load()
 
-    num_episodes = 1000
+    num_episodes = 2000
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
@@ -55,7 +57,6 @@ def train_mario(log = False):
         while True:
             if episode % 10 == 0:
                 env.render()
-                time.sleep(0.05)
             # print("State shape before agent.act:", state.shape)
             action = agent.act(state)
             steps += 1
@@ -165,7 +166,7 @@ def log_model_version():
     action_space = env.action_space.n
     agent = DDQNAgent(env, state_space, action_space)
     agent.load()
-    num_episodes = 100
+    num_episodes = 1000
     logger = NeptuneModels()
     logger.model_version(
         "MARIO-DDQN",
@@ -187,6 +188,7 @@ def log_model_version():
 
 if __name__ == '__main__':
     print("Starting training")
+    #train_mario(log = "true")
     train_mario(log = "true")
     #render_mario()
-    #log()
+    #log_model_version()
