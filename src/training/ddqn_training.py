@@ -18,7 +18,7 @@ def train_mario(log = False):
     agent = DDQNAgent(env, state_space, action_space)
 
 
-    num_episodes = 200
+    num_episodes = 400
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
@@ -45,6 +45,8 @@ def train_mario(log = False):
             description="DDQN training run",
             tags = ["DDQN"]
             )
+
+    env.reset()
     for episode in tqdm(range(num_episodes)):
         state = env.reset()
         state = torch.tensor(np.array([state]))
@@ -52,10 +54,10 @@ def train_mario(log = False):
         total_reward = 0
         steps = 0
         reward_per_step = 0
-    
         while True:
             if episode % 10 == 0:
                 env.render()
+                time.sleep(0.05)
             # print("State shape before agent.act:", state.shape)
             action = agent.act(state)
             steps += 1

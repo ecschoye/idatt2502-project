@@ -12,8 +12,7 @@ from ..utils.replay_buffer import ReplayBuffer
 
 
 class DDQNAgent:
-    def __init__(self, env, state_space, action_space, memory_size=20000, batch_size=32, lr=0.0025, gamma=0.90,
-                 epsilon=1.0, epsilon_min=0.01, epsilon_decay=0.995, copy=5000, pretrained_path=None):
+    def __init__(self, env, state_space, action_space, memory_size=20000, batch_size=32, lr=0.00025, gamma=0.90, epsilon=1.0, epsilon_min=0.01, epsilon_decay=10**5, copy=5000, pretrained_path=None):
         # Environment
         self.env = env
         self.state_space = state_space
@@ -29,6 +28,7 @@ class DDQNAgent:
         self.copy = copy
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
+        self.epsilon_max = epsilon
         self.epsilon_min = epsilon_min
         self.gamma = gamma
         self.lr = lr
@@ -40,6 +40,7 @@ class DDQNAgent:
         self.target_model = DQN(self.state_space, self.action_space).to(self.device)
         self.ending_position = 0
         self.num_in_queue = 0
+        self.steps = 0
 
         # Load pretrained model
         self.pretrained_path = pretrained_path
@@ -49,14 +50,15 @@ class DDQNAgent:
 
         # Optimizer and loss
         self.optimizer = torch.optim.Adam(self.local_model.parameters(), lr=self.lr, eps=1e-4)
-        self.loss = nn.MSELoss()
+        self.loss = nn.SmoothL1Loss().to(self.device)
 
         self.steps = 0
         self.train_loss = []
         self.reward_history = []
 
     def update_epsilon(self):
-        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        #self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)'
+        self.epsilon = self.epsilon_min + (self.epsilon_max - self.epsilon_min) * math.exp(-1 * ((self.steps + 1) / self.epsilon_decay))
 
     def increment_steps(self):
         self.steps += 1
@@ -67,7 +69,7 @@ class DDQNAgent:
     def act(self, state):
         #print("State shape in act:", state.shape)
         # Epsilon-greedy action selection
-        if random.random()  <= self.epsilon:
+        if random.random() <= self.epsilon:
             action = np.random.randint(self.action_space)
         else:
             action_values = self.local_model(torch.tensor(state, dtype=torch.float32, device=self.device))
@@ -83,7 +85,7 @@ class DDQNAgent:
         self.memory.add(state, action, reward, next_state, done, self.ending_position)
 
     def update_q_value(self, reward, next_state, done):
-        return reward + torch.mul(self.gamma * self.target_model(next_state).max(1).values.unsqueeze(1), 1 - done)
+        return reward + torch.mul((self.gamma * self.target_model(next_state).max(1).values.unsqueeze(1)), 1 - done)
 
     def update_target_model(self):
         self.target_model.load_state_dict(self.local_model.state_dict())
@@ -95,17 +97,17 @@ class DDQNAgent:
         if self.num_in_queue < self.batch_size:
             return
 
-        states, actions, rewards, next_states, done_flags = self.memory.sample(self.num_in_queue, self.batch_size,
-                                                                               self.device)
+        state, action, reward, next_state, done_flag = self.memory.sample(
+            self.num_in_queue, self.batch_size, self.device
+        )
 
-        target = self.update_q_value(rewards, next_states, done_flags)
-
-        current = self.local_model(states).gather(1, actions)
-
+        # target = REWARD + torch.mul((self.gamma * self.target_net(STATE2).max(1).values.unsqueeze(1)),  1 - DONE)
+        self.optimizer.zero_grad()
+        target = self.update_q_value(reward, next_state, done_flag)
+        current = self.local_model(state).gather(1, action.long())
         loss = self.loss(current, target)
         loss.backward()
         self.optimizer.step()
-
 
     def save(self):
         self.local_model.save()
