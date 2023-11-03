@@ -6,8 +6,9 @@ import torch
 from torch import nn
 from torch.distributions import Categorical
 from torch.optim import Adam
+import torch.nn.functional as F
 from ..network.network import DiscreteActorCriticNN
-from src.neptune_wrapper import NeptuneModels, NeptuneRun
+from src.neptune_wrapper import NeptuneRun
 
 class PPO:
     def __init__(self, env, hyperparameters=None):
@@ -340,7 +341,7 @@ class PPO:
         # Query the actor network for a mean action.
         # Same as calling self.actor.forward(obs)
         obs = torch.tensor(obs,dtype=torch.float).to(self.device)
-        action_probs = self.actor(obs.to(self.device))
+        action_probs = F.softmax(self.actor(obs.to(self.device)), dim=1).to(self.device)
         # Multivariate Normal Distribution
         action_dist = Categorical(action_probs)
         # Sample an action from the distribution and get its log probability
@@ -354,7 +355,7 @@ class PPO:
         # Calculate the log probabilities of batch actions using most
         # recent actor network
         # This segment of code is similar to that in get_action()
-        action_prob = self.actor(batch_obs[0]).to(self.device)
+        action_prob = F.softmax(self.actor(batch_obs[0]), dim=1).to(self.device)
         action_dist = Categorical(action_prob)
         log_probs = action_dist.log_prob(batch_acts).to(self.device)
 

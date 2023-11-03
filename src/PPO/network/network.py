@@ -1,12 +1,10 @@
 import torch
-import torch.nn.functional as F
 from torch import nn
 
 
 class DiscreteActorCriticNN(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(DiscreteActorCriticNN, self).__init__()
-
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.to(self.device)
 
@@ -33,4 +31,4 @@ class DiscreteActorCriticNN(nn.Module):
         x = torch.tensor(state, dtype=torch.float).unsqueeze(0).to(self.device)
         x = self.conv(x)
         x = x.view(x.size(0), -1)
-        return F.softmax(self.fc(x), dim=1)
+        return self.fc(x)

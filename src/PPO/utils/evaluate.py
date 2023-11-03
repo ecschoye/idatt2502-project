@@ -1,6 +1,6 @@
 import torch
 from torch.distributions import Categorical
-
+import torch.nn.functional as F
 
 def evaluate(policy, env, render=False):
     if torch.cuda.is_available():
@@ -74,7 +74,7 @@ def rollout(policy, env, render):
                 env.render()
 
             # Query deterministic action from policy and run it
-            action = policy(obs)
+            action = F.softmax(policy(obs), dim=1)
             action_dist = Categorical(action)
             obs, rew, done, _ = env.step(action_dist.sample().item())
 
