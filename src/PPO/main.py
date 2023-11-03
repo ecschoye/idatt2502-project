@@ -10,16 +10,19 @@ CRITIC_PATH = "./src/PPO/network/ppo_critic.pth"
 STRINGS = {
     "menu": """
     Welcome to Proximal Policy Main
-    [1] Train New Agents
-    [2] Continue Training Previous Agents
+    [1] Run Single Training
+    [2] Run Training Loop
     [3] Test
   """,
     "loading_agents": "Loading actor and critic models from file...",
     "loading_success": "Actor and critic models successfully loaded",
     "from_scratch": "Training from scratch",
     "testing": "Testing trained model",
+    "run_starting" : "Training run started",
+    "run_finished" : "Training run finished",
+    "training_loop": "Starting training loop"
 }
-
+TIMESTEPS = 100_000
 
 def main():
     """
@@ -32,12 +35,29 @@ def main():
     choice = int(input("Enter a number:"))
 
     if choice == 1:
-        train(env, "", "")
-    elif choice == 2:
         train(env, ACTOR_PATH, CRITIC_PATH)
+    elif choice == 2:
+        train_loop(env)
     elif choice == 3:
         test(env, ACTOR_PATH, CRITIC_PATH)
+    
+    env.close()
 
+def train_loop(env):
+    ITERATIONS = 20
+    print(STRINGS["training_loop"], flush=True)
+    model = PPO(env, hyperparameters)
+    model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+    model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+    try: 
+        for _ in range(ITERATIONS): 
+            print(STRINGS["run_starting"], flush=True)
+            model.learn(TIMESTEPS)
+            print(STRINGS["run_finished"], flush=True)
+    except KeyboardInterrupt:
+        print("Shutting down")
+    finally: 
+        model.close_logger()
 
 def train(env, actor_model, critic_model):
     model = PPO(env, hyperparameters)
@@ -50,8 +70,7 @@ def train(env, actor_model, critic_model):
     else:
         print(STRINGS["from_scratch"], flush=True)
 
-    model.run(total_timesteps=5_000)
-    env.close()
+    model.learn(total_timesteps=TIMESTEPS)
 
 
 def test(env, actor_model, critic_model):
@@ -66,8 +85,7 @@ def test(env, actor_model, critic_model):
     policy = DiscreteActorCriticNN(obs_dim, act_dim)
     policy.load_state_dict(torch.load(actor_model))
 
-    evaluate.evaluate(policy, env, render=True)
-    env.close()
+    evaluate(policy, env, render=True)
 
 
 main()
