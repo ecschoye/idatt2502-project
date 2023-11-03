@@ -95,15 +95,6 @@ class PPO:
             for param, val in hyperparameters.items():
                 exec ("self." + param + " = " + str(val))
 
-    def run(self, total_timesteps): 
-        try: 
-            self.learn(total_timesteps)
-        except KeyboardInterrupt:
-            print("Shutting down")
-        finally:
-            if self.log:
-                self.neptune_logger.finish()    
-
     def learn(self, total_timesteps):
         """
             Train the actor and critic networks.
@@ -149,7 +140,7 @@ class PPO:
 
             for _ in range(self.n_updates_per_iteration):
                 # Introducing dynamic learining rate that decreases as the training advances
-                frac = (t_so_far - 1.0) / total_timesteps
+                frac = (t_so_far - 1.0) / (2 * total_timesteps)
                 new_lr = self.lr * (1.0 - frac)
 
                 # Learning rate never below zero
@@ -333,7 +324,7 @@ class PPO:
         # Query the actor network for a mean action.
         # Same as calling self.actor.forward(obs)
         obs = torch.tensor(obs,dtype=torch.float).to(self.device)
-        action_probs = self.actor(obs)
+        action_probs = self.actor(obs.to(self.device))
 
         # Multivariate Normal Distribution
         action_dist = Categorical(action_probs)
@@ -341,7 +332,7 @@ class PPO:
         # Sample an action from the distribution and get its log probability
         action = action_dist.sample()
 
-        return action.item(), action_dist.log_prob(action)
+        return action.item(), action_dist.log_prob(action).to(self.device)
 
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs
@@ -349,11 +340,14 @@ class PPO:
         # Calculate the log probabilities of batch actions using most
         # recent actor network
         # This segment of code is similar to that in get_action()
-        action_prob = self.actor(batch_obs[0])
+        action_prob = self.actor(batch_obs[0]).to(self.device)
         action_dist = Categorical(action_prob)
-        log_probs = action_dist.log_prob(batch_acts)
+        log_probs = action_dist.log_prob(batch_acts).to(self.device)
 
         return V, log_probs, action_dist.entropy()
+
+    def close_logger(self): 
+        self.neptune_logger.finish()
 
     def _print_summary(self):
 
@@ -370,7 +364,7 @@ class PPO:
         lr = self.logger['lr']
         avg_ep_lens = np.mean(self.logger['batch_lens'])
         avg_ep_rews = np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])
-        avg_actor_loss = np.mean([losses.float().mean() for losses in self.logger['actor_losses']])
+        avg_actor_loss = np.mean([losses.float().mean().cpu() for losses in self.logger['actor_losses']])
 
         # Round decimal places for more aesthetic logging messages
         avg_ep_lens = str(round(avg_ep_lens, 2))
@@ -394,13 +388,14 @@ class PPO:
         self.logger['batch_lens'] = []
         self.logger['batch_rews'] = []
         self.logger['actor_losses'] = []
+        self.logger['lr'] = []
 
     def log_epoch(self):
         self.neptune_logger.log_epoch({
             "train/iteration_numer": self.logger['i_so_far'],
             "train/average_episodic_length": np.mean(self.logger['batch_lens']),
             "train/average_episodic_return": np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']]),
-            "train/average_loss": np.mean([losses.float().mean() for losses in self.logger['actor_losses']]),
+            "train/average_loss": np.mean([losses.float().mean().cpu() for losses in self.logger['actor_losses']]),
             "train/timesteps_so_far": self.logger['t_so_far'],
             "train/time_consumed": round((time.time_ns()-self.logger['delta_t']) / 1e9, 2),
             "train/learning_rate": self.logger['lr'],
