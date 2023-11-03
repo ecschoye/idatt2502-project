@@ -22,7 +22,7 @@ STRINGS = {
     "run_finished" : "Training run finished",
     "training_loop": "Starting training loop"
 }
-TIMESTEPS = 100_000
+TIMESTEPS = 200_000
 
 def main():
     """
@@ -30,6 +30,7 @@ def main():
     """
 
     env = create_mario_env()
+    env.metadata['render-modes']="human"
 
     print(STRINGS["menu"], flush=True)
     choice = int(input("Enter a number:"))
@@ -44,20 +45,16 @@ def main():
     env.close()
 
 def train_loop(env):
-    ITERATIONS = 20
+    ITERATIONS = 10
     print(STRINGS["training_loop"], flush=True)
-    model = PPO(env, hyperparameters)
-    model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
-    model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
-    try: 
-        for _ in range(ITERATIONS): 
-            print(STRINGS["run_starting"], flush=True)
-            model.learn(TIMESTEPS)
-            print(STRINGS["run_finished"], flush=True)
-    except KeyboardInterrupt:
-        print("Shutting down")
-    finally: 
-        model.close_logger()
+    for _ in range(ITERATIONS): 
+        print(STRINGS["run_starting"], flush=True)
+        model = PPO(env, hyperparameters)
+        model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        model.learn(TIMESTEPS)
+        print(STRINGS["run_finished"], flush=True)
+        
 
 def train(env, actor_model, critic_model):
     model = PPO(env, hyperparameters)
