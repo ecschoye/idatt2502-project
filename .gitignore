@@ -127,3 +127,4 @@ venv
 .idea
 .neptune
 setup.py
+.vscode

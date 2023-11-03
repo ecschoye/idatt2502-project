@@ -1,9 +1,7 @@
-import math
 import time
 import numpy as np
 import torch
 from tqdm import tqdm
-
 from src.agent.ddqn_agent import DDQNAgent
 from src.environment import create_mario_env
 from src.utils.replay_buffer import ReplayBuffer
@@ -188,6 +186,6 @@ def log_model_version():
 
 if __name__ == '__main__':
     print("Starting training")
-    train_mario(log = True)
+    train_mario()
     #render_mario()
     #log()
