@@ -33,4 +33,4 @@ class DiscreteActorCriticNN(nn.Module):
         x = torch.tensor(state, dtype=torch.float).unsqueeze(0).to(self.device)
         x = self.conv(x)
         x = x.view(x.size(0), -1)
-        return F.softmax(self.fc(x), dim=0)
+        return F.softmax(self.fc(x), dim=1)
