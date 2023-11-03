@@ -22,14 +22,14 @@ STRINGS = {
     "run_finished" : "Training run finished",
     "training_loop": "Starting training loop"
 }
-TIMESTEPS = 200_000
+TIMESTEPS = 300_000
 
 def main():
     """
     Main Function to run training or testing
     """
 
-    env = create_mario_env()
+    env = create_mario_env("SuperMarioBros-1-1-v0")
     env.metadata['render-modes']="human"
 
     print(STRINGS["menu"], flush=True)
@@ -45,13 +45,14 @@ def main():
     env.close()
 
 def train_loop(env):
-    ITERATIONS = 10
+    ITERATIONS = 8
     print(STRINGS["training_loop"], flush=True)
-    for _ in range(ITERATIONS): 
+    for i in range(ITERATIONS): 
         print(STRINGS["run_starting"], flush=True)
         model = PPO(env, hyperparameters)
-        model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
-        model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        if i != 0:
+            model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+            model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
         model.learn(TIMESTEPS)
         print(STRINGS["run_finished"], flush=True)
         
