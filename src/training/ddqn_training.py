@@ -16,7 +16,7 @@ def train_mario(log = False):
     agent = DDQNAgent(env, state_space, action_space)
 
 
-    num_episodes = 400
+    num_episodes = 1000
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
@@ -24,7 +24,6 @@ def train_mario(log = False):
     flags = 0
     done = False
     prev_reward = 0
-    frames = []
     #init logger with proper params
     if log:
         logger = NeptuneRun(params = {
@@ -52,6 +51,7 @@ def train_mario(log = False):
         total_reward = 0
         steps = 0
         reward_per_step = 0
+        frames = []
         while True:
             if episode % 10 == 0:
                 env.render()
@@ -77,9 +77,12 @@ def train_mario(log = False):
             agent.experience_replay()
 
             state = next_state
-
+            if log:
+                frames.append(env.frame)
             if done:
                 if info['flag_get']:
+                    if log and flags < 3:
+                        logger.log_frames(frames)
                     flags += 1
                 if total_reward > max_episode_reward:
                     max_episode_reward = total_reward
@@ -95,8 +98,6 @@ def train_mario(log = False):
         
 
             prev_reward = total_reward
-            if(episode == num_episodes-1):
-                frames.append(env.frame)
         total_rewards.append(reward)
         if episode % 10 == 0:
             tqdm.write("Episode: {}, Reward: {}, Max Reward: {}, Epsilon: {}, Steps: {}, Flags: {}".format(episode,
@@ -186,6 +187,6 @@ def log_model_version():
 
 if __name__ == '__main__':
     print("Starting training")
-    train_mario()
+    train_mario(log = "true")
     #render_mario()
     #log()
