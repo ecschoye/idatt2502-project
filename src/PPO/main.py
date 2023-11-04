@@ -50,7 +50,7 @@ def main():
     env.close()
 
 def train_loop(env, parameters, notes):
-    parameters['run_notes'] = notes
+    parameters['run_notes'] = str("\"" + notes + "\"")
     ITERATIONS = 8
     print(STRINGS["training_loop"], flush=True)
     for i in range(ITERATIONS): 
@@ -64,7 +64,7 @@ def train_loop(env, parameters, notes):
         
 
 def train(env, actor_model, critic_model, parameters, notes):
-    parameters['run_notes'] = notes
+    parameters['run_notes'] = str("\"" + notes + "\"")
     model = PPO(env, parameters)
     if actor_model != "" and critic_model != "":
         print(STRINGS["loading_agents"], flush=True)

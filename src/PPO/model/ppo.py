@@ -50,7 +50,7 @@ class PPO:
                     "timesteps_per_batch": self.timesteps_per_batch,
                     "max_timesteps_per_episode": self.max_timesteps_per_episode,
                 },
-                description="PPO Test Run: " + hyperparameters['log_notes'],
+                description="PPO Test Run: " + hyperparameters['run_notes'],
                 tags=["PPO"]
                 )
         self.logger = {
@@ -62,7 +62,7 @@ class PPO:
             "batch_rews": [],  # episodic returns in batch
             "actor_losses": [],  # losses of actor network in current iteration
             "lr" : [], # learning rates 
-            "gamma": [] # Gamma values, discount rates
+            "ent_coef": [], # entropy coefficients
         }
         self.best_run_frames = []
 
@@ -75,7 +75,7 @@ class PPO:
         self.max_timesteps_per_episode = 400  # timesteps per episode
         
         # Algorithm
-        self.gamma = 0.95                 # Discount factor   
+        self.gamma = 0.90                 # Discount factor   
         self.n_updates_per_iteration = 5  # number of updates per iteration
         self.clip = 0.2                   # Recommended
         self.lr = 0.005                   # Learning rate
@@ -92,6 +92,7 @@ class PPO:
         self.render_every_i = 1 # Only render every i iterations
         self.log = False #If we push logs to Neptune
         self.capture_frames = False # If we capture frames 
+        self.run_notes = "" # Notes for the run 
 
         """ 
             Update passed hyperparameters 
@@ -99,8 +100,7 @@ class PPO:
         if hyperparameters is not None:
             for param, val in hyperparameters.items():
                 exec ("self." + param + " = " + str(val))
-
-        self.init_gamma = self.gamma 
+        self.ent_coef_init = self.ent_coef
 
     def learn(self, total_timesteps):
         """
@@ -149,15 +149,16 @@ class PPO:
                 # Introducing dynamic learining rate that decreases as the training advances
                 frac = (t_so_far - 1.0) / (4 * total_timesteps)
                 new_lr = self.lr * (1.0 - frac)
-                new_gamma = self.init_gamma * (1.0 - frac)
+                new_ent_coef = self.ent_coef_init * (1.0 - frac)
 
                 # Learning rate never below zero
-                self.gamma = max(new_gamma, 0.000001)
                 new_lr = max(new_lr, 0.000001)
+                new_ent_coef = max(new_ent_coef, 0.000001)
+                self.ent_coef = new_ent_coef
                 self.actor_optim.param_groups[0]["lr"] = new_lr 
                 self.critic_optim.param_groups[0]["lr"] = new_lr  
                 self.logger['lr'] = new_lr 
-                self.logger['gamma'] = new_gamma
+                self.logger['ent_coef'] = new_ent_coef
 
                 np.random.shuffle(inds)
                 for start in range(0, step, minibatch_size):
@@ -384,7 +385,6 @@ class PPO:
         t_so_far = self.logger['t_so_far']
         i_so_far = self.logger['i_so_far']
         lr = self.logger['lr']
-        gamma = self.logger['gamma']
         best_run_rews = self.logger['best_run_rews']
         avg_ep_lens = np.mean(self.logger['batch_lens'])
         avg_ep_rews = np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])
@@ -396,7 +396,6 @@ class PPO:
         best_run_rews = str(round(best_run_rews, 2))
         avg_actor_loss = str(round(avg_actor_loss, 5))
         lr = str(round(lr, 5))
-        gamma = str(round(gamma, 5))
 
         # Print logging statements
         print(flush=True)
@@ -408,7 +407,6 @@ class PPO:
         print(f"Timesteps So Far: {t_so_far}", flush=True)
         print(f"Iteration took: {delta_t} secs", flush=True)
         print(f"Learning rate: {lr}", flush=True)
-        print(f"Gamma: {gamma}", flush=True)
         print(f"Length of best run: {len(self.best_run_frames)}", flush=True)
         print(f"------------------------------------------------------", flush=True)
         print(flush=True)
@@ -418,7 +416,6 @@ class PPO:
         self.logger['batch_rews'] = []
         self.logger['actor_losses'] = []
         self.logger['lr'] = []
-        self.logger['gamma'] = []
 
     def log_epoch(self):
         self.neptune_logger.log_epoch({
@@ -429,5 +426,5 @@ class PPO:
             "train/timesteps_so_far": self.logger['t_so_far'],
             "train/time_consumed": round((time.time_ns()-self.logger['delta_t']) / 1e9, 2),
             "train/learning_rate": self.logger['lr'],
-            "train/gamma": self.logger['gamma'],
+            "traint/ent_coef": self.logger['ent_coef'],
         })
