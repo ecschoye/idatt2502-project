@@ -14,6 +14,7 @@ STRINGS = {
     [2] Run Training Loop
     [3] Test
   """,
+    "notes": "Would you like to add any notes?",
     "loading_agents": "Loading actor and critic models from file...",
     "loading_success": "Actor and critic models successfully loaded",
     "from_scratch": "Training from scratch",
@@ -35,21 +36,26 @@ def main():
     print(STRINGS["menu"], flush=True)
     choice = int(input("Enter a number:"))
 
+    if choice != 3: 
+        print(STRINGS["notes"], flush=True)
+        notes = input("Enter notes:")
+
     if choice == 1:
-        train(env, ACTOR_PATH, CRITIC_PATH)
+        train(env, ACTOR_PATH, CRITIC_PATH, hyperparameters, notes)
     elif choice == 2:
-        train_loop(env)
+        train_loop(env, hyperparameters, notes)
     elif choice == 3:
         test(env, ACTOR_PATH, CRITIC_PATH)
     
     env.close()
 
-def train_loop(env):
+def train_loop(env, parameters, notes):
+    parameters['run_notes'] = notes
     ITERATIONS = 8
     print(STRINGS["training_loop"], flush=True)
     for i in range(ITERATIONS): 
         print(STRINGS["run_starting"], flush=True)
-        model = PPO(env, hyperparameters)
+        model = PPO(env, parameters)
         if i != 0:
             model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
             model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
@@ -57,9 +63,9 @@ def train_loop(env):
         print(STRINGS["run_finished"], flush=True)
         
 
-def train(env, actor_model, critic_model):
-    model = PPO(env, hyperparameters)
-
+def train(env, actor_model, critic_model, parameters, notes):
+    parameters['run_notes'] = notes
+    model = PPO(env, parameters)
     if actor_model != "" and critic_model != "":
         print(STRINGS["loading_agents"], flush=True)
         model.actor.load_state_dict(torch.load(actor_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
