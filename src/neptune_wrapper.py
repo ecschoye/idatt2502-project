@@ -111,17 +111,27 @@ class NeptuneRun:
             for key in (metadata_dict):
                 self.run[key].extend([metadata_dict[key] for metadata_dict[key] in range(len(metadata_dict[key]))])
 
-    def log_frames(self, frames):
+    def log_frames(self, frames, episode_number):
+        """
+        Creates a video from a list of frames representing one episode of the game and uploads it to the logging system.
+        Each video is named with the episode number to differentiate between different episodes. After uploading, the
+        local video file is deleted to save space.
+
+        Parameters:
+        frames (list): A list of frames to be combined into a video.
+        episode_number (int): The episode number to be included in the video filename.
+
+        """
         x, y, z = frames[0].shape
         size = (y, x)
-        vid = cv2.VideoWriter('animation.mp4', cv2.VideoWriter_fourcc(*'avc1'), 30, size, True)
+        vid = cv2.VideoWriter('animation_{}.mp4'.format(episode_number), cv2.VideoWriter_fourcc(*'avc1'), 30, size, True)
         for frame in frames:
             rgb_img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             vid.write(rgb_img)
         vid.release()
-        self.run["train/animation"].upload('animation.mp4')
+        self.run["train/animation"].upload_files('animation_{}.mp4'.format(episode_number))
         self.run.wait()
-        os.remove('animation.mp4')
+        os.remove('animation_{}.mp4'.format(episode_number))
 
     def finish(self):
         self.run.stop()
