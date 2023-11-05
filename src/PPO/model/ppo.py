@@ -62,7 +62,6 @@ class PPO:
             "batch_rews": [],  # episodic returns in batch
             "actor_losses": [],  # losses of actor network in current iteration
             "lr" : [], # learning rates 
-            "ent_coef": [], # entropy coefficients
         }
         self.best_run_frames = []
 
@@ -100,7 +99,6 @@ class PPO:
         if hyperparameters is not None:
             for param, val in hyperparameters.items():
                 exec ("self." + param + " = " + str(val))
-        self.ent_coef_init = self.ent_coef
 
     def learn(self, total_timesteps):
         """
@@ -149,16 +147,12 @@ class PPO:
                 # Introducing dynamic learining rate that decreases as the training advances
                 frac = (t_so_far - 1.0) / (4 * total_timesteps)
                 new_lr = self.lr * (1.0 - frac)
-                new_ent_coef = self.ent_coef_init * (1.0 - frac)
 
                 # Learning rate never below zero
                 new_lr = max(new_lr, 0.000001)
-                new_ent_coef = max(new_ent_coef, 0.000001)
-                self.ent_coef = new_ent_coef
                 self.actor_optim.param_groups[0]["lr"] = new_lr 
                 self.critic_optim.param_groups[0]["lr"] = new_lr  
                 self.logger['lr'] = new_lr 
-                self.logger['ent_coef'] = new_ent_coef
 
                 np.random.shuffle(inds)
                 for start in range(0, step, minibatch_size):
@@ -426,5 +420,4 @@ class PPO:
             "train/timesteps_so_far": self.logger['t_so_far'],
             "train/time_consumed": round((time.time_ns()-self.logger['delta_t']) / 1e9, 2),
             "train/learning_rate": self.logger['lr'],
-            "traint/ent_coef": self.logger['ent_coef'],
         })
