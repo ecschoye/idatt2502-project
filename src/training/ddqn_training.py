@@ -7,7 +7,8 @@ from src.environment import create_mario_env
 from src.utils.replay_buffer import ReplayBuffer
 from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
-def train_mario(pretrained = False, log = False):
+
+def train_mario(pretrained=False, log=False):
     print("Creating environment")
     env = create_mario_env("SuperMarioBros-1-1-v0")
     state_space = env.observation_space.shape
@@ -18,32 +19,32 @@ def train_mario(pretrained = False, log = False):
     if pretrained:
         agent.load()
 
-    num_episodes = 2000
+    num_episodes = 3700
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
     interval_reward = 0
-    flags = 0
+    logged_flags = 0
     done = False
     prev_reward = 0
-    #init logger with proper params
+    # init logger with proper params
     if log:
-        logger = NeptuneRun(params = {
-                "gamma": agent.gamma,
-                "epsilon": agent.epsilon,
-                "epsilon_min": agent.epsilon_min,
-                "epsilon_decay": agent.epsilon_decay,
-                "learning_rate": agent.lr,
-                "batch_size": agent.batch_size,
-                "memory_size": agent.memory_size,
-                "copy": agent.copy,
-                "action_space": agent.action_space,
-                "state_space": agent.state_space,
-                "num_episodes": num_episodes,
-            },
+        logger = NeptuneRun(params={
+            "gamma": agent.gamma,
+            "epsilon": agent.epsilon,
+            "epsilon_min": agent.epsilon_min,
+            "epsilon_decay": agent.epsilon_decay,
+            "learning_rate": agent.lr,
+            "batch_size": agent.batch_size,
+            "memory_size": agent.memory_size,
+            "copy": agent.copy,
+            "action_space": agent.action_space,
+            "state_space": agent.state_space,
+            "num_episodes": num_episodes,
+        },
             description="DDQN training run",
-            tags = ["DDQN"]
-            )
+            tags=["DDQN"]
+        )
 
     env.reset()
     for episode in tqdm(range(num_episodes)):
@@ -62,7 +63,7 @@ def train_mario(pretrained = False, log = False):
             steps += 1
 
             next_state, reward, done, info = env.step(action)
-            #reward = get_reward(done, steps, reward, env)
+            # reward = get_reward(done, steps, reward, env)
             total_reward += reward
             interval_reward += reward
             next_state = torch.tensor(np.array([next_state]))
@@ -82,21 +83,21 @@ def train_mario(pretrained = False, log = False):
                 frames.append(env.frame)
             if done:
                 if info['flag_get']:
-                    if log and flags < 3:
-                        logger.log_frames(frames)
-                    flags += 1
+                    logged_flags += 1
+
+                    if log and episode >= 3000:
+                        logger.log_frames(frames, episode)
+
                 if total_reward > max_episode_reward:
                     max_episode_reward = total_reward
                 break
-            
-            
+
             ###
-            #if agent.epsilon > 0.05:
-             #   if total_reward > prev_reward and episode > int(0.1 * num_episodes):
-             #       agent.epsilon = math.pow(agent.epsilon_decay,
-             #                                episode - int(0.05 * num_episodes))
+            # if agent.epsilon > 0.05:
+            #   if total_reward > prev_reward and episode > int(0.1 * num_episodes):
+            #       agent.epsilon = math.pow(agent.epsilon_decay,
+            #                                episode - int(0.05 * num_episodes))
             ###
-        
 
             prev_reward = total_reward
         total_rewards.append(reward)
@@ -106,25 +107,26 @@ def train_mario(pretrained = False, log = False):
                                                                                                            max_episode_reward,
                                                                                                            agent.epsilon,
                                                                                                            steps,
-                                                                                                           flags)
-            )
-            if(log and num_episodes >= 100):
+                                                                                                           logged_flags)
+                       )
+            if (log and num_episodes >= 100):
                 logger.log_epoch({
-                    "train/avg_reward_per_10_episodes" : interval_reward/10
+                    "train/avg_reward_per_10_episodes": interval_reward / 10
                 })
             interval_reward = 0
             agent.save()
         if log:
             logger.log_epoch({
-                "train/reward" : total_reward,
-                "train/max_episode_reward" : max_episode_reward,
-                "train/epsilon" : agent.epsilon,
-                "train/steps" : steps,
-                "train/reward_per_step" : total_reward / steps,
+                "train/reward": total_reward,
+                "train/max_episode_reward": max_episode_reward,
+                "train/epsilon": agent.epsilon,
+                "train/steps": steps,
+                "train/reward_per_step": total_reward / steps,
+                "train/flags": logged_flags,
             })
         agent.update_epsilon()
     if log:
-        logger.log_frames(frames)
+        logger.log_frames(frames, episode)
         logger.finish()
     agent.save()
     env.close()
@@ -134,6 +136,7 @@ def get_reward(done, step, reward, env):
     if not done or step == 10000:
         return reward
     return -100
+
 
 def render_mario():
     your_state_space = (4, 84, 84)
@@ -157,8 +160,8 @@ def render_mario():
         if done:
             env.reset()
 
-
     env.close()
+
 
 def log_model_version():
     env = create_mario_env()
@@ -186,9 +189,10 @@ def log_model_version():
         ["../trained_model", "../replay_buffer_data"]
     )
 
+
 if __name__ == '__main__':
     print("Starting training")
-    #train_mario(log = "true")
-    train_mario(log = "true")
-    #render_mario()
-    #log_model_version()
+    train_mario(log=True)
+    # train_mario(log="true")
+    # render_mario()
+    # log_model_version()
