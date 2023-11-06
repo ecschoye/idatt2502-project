@@ -70,21 +70,46 @@ class DDQNAgent:
         self.reward_history = []
 
     def update_epsilon(self):
-        #self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)'
+        """
+        Adjusts the epsilon value for the epsilon-greedy policy using exponential decay.
+
+        This encourages the agent to gradually shift from exploring the environment to exploiting
+        the learned policy as it gains more experience (indicated by the number of steps taken).
+        """
         self.epsilon = self.epsilon_min + (self.epsilon_max - self.epsilon_min) * math.exp(-1 * ((self.steps + 1) / self.epsilon_decay))
 
     def increment_steps(self):
+        """
+        Increments the number of steps taken by the agent.
+        """
         self.steps += 1
 
     def best_action(self, state):
+        """
+        Identifies the action with the highest Q-value for the given state.
+
+        :return: A tensor containing the action with the highest Q-value.
+        """
         return torch.argmax(self.local_model(state.to(self.device))).unsqueeze(0).unsqueeze(0).cpu()
 
     def act(self, state):
-        # print("State shape in act:", state.shape)
+        """
+        Chooses an action based on the current state using the epsilon-greedy policy.
+
+        With a probability of epsilon, a random action is chosen (exploration).
+        Otherwise, the action with the highest predicted Q-value is chosen (exploitation).
+
+        Also increments the number of steps taken by the agent.
+
+        :param state: The current state of the environment.
+        :return: The chosen action.
+        """
         # Epsilon-greedy action selection
         if random.random() <= self.epsilon:
+            # Random action
             action = np.random.randint(self.action_space)
         else:
+            # Greedy action
             action_values = self.local_model(torch.tensor(state, dtype=torch.float32, device=self.device))
             action = torch.argmax(action_values).item()
 
@@ -92,42 +117,80 @@ class DDQNAgent:
 
         return action
 
-    def remember(self, state, action, reward, next_state, done):
-        self.ending_position = (self.ending_position + 1) % self.memory_size
-        self.num_in_queue = min(self.num_in_queue + 1, self.memory_size)
-        self.memory.add(state, action, reward, next_state, done, self.ending_position)
+    def store_experience(self, state, action, reward, next_state, done):
+        """
+        Stores the experience in the replay buffer.
+        """
+        self.memory.add(state, action, reward, next_state, done)
 
     def update_q_value(self, reward, next_state, done):
+        """
+        Computes the updated Q-value for the current state using the reward and the next state.
+
+        This function calculates the target Q-value for the current state based on the Bellman equation,
+        taking into account whether the next state is terminal (done).
+        """
         return reward + torch.mul((self.gamma * self.target_model(next_state).max(1).values.unsqueeze(1)), 1 - done)
 
     def update_target_model(self):
+        """
+        Updates the weights of the target network with the weights of the local network.
+
+        This method is used to periodically update the target network's weights, thereby stabilizing training.
+        """
         self.target_model.load_state_dict(self.local_model.state_dict())
 
     def experience_replay(self):
+        """
+        Performs a single step of the experience replay algorithm.
+
+        This method conducts the learning process for the agent by using a batch of
+        experiences sampled from memory. It updates the local model by minimizing the
+        difference between predicted Q-values and target Q-values, calculated using the
+        Bellman equation.
+        """
+        # Check if it is time to update the target model based on the copy parameter
         if self.steps % self.copy == 0:
+            # Update the target model
             self.update_target_model()
 
-        if self.num_in_queue < self.batch_size:
+        # Check if there are enough samples in memory
+        if self.memory.num_in_queue < self.batch_size:
             return
 
-        state, action, reward, next_state, done_flag = self.memory.sample(
-            self.num_in_queue, self.batch_size, self.device
-        )
+        # Sample a batch of experiences from the memory
+        state, action, reward, next_state, done_flag = self.memory.sample(self.batch_size, self.device)
 
-        # target = REWARD + torch.mul((self.gamma * self.target_net(STATE2).max(1).values.unsqueeze(1)),  1 - DONE)
+        # Zero the gradients
         self.optimizer.zero_grad()
+
+        # Calculate the target Q values for the next state
         target = self.update_q_value(reward, next_state, done_flag)
+
+        # Predict the current Q values from the local model using the sampled states and actions
         current = self.local_model(state).gather(1, action.long())
+
+        # Compute the loss
         loss = self.loss(current, target)
+
+        # Backpropagate the loss
         loss.backward()
+
+        # Perform an optimization step
         self.optimizer.step()
 
     def save(self):
+        """
+        Saves the model and the memory.
+        """
         self.local_model.save()
         self.target_model.save(True)
         self.memory.save()
 
     def load(self):
+        """
+        Loads the model and the memory.
+        """
         self.local_model.load(self.device)
         self.target_model.load(self.device)
         self.memory.load()
