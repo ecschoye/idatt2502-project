@@ -75,7 +75,7 @@ def train_mario(pretrained=False, log=False):
             action = torch.tensor([action], dtype=torch.long).unsqueeze(0)
             # print("Action shape:", action.shape)
 
-            agent.remember(state, action, reward, next_state, done)
+            agent.store_experience(state, action, reward, next_state, done)
             agent.experience_replay()
 
             state = next_state
