@@ -130,7 +130,7 @@ class PPO:
 
             # Calculate V_{phi, k}
             A_k = self.calculate_gae(batch_rews, batch_vals, batch_dones)
-            V = self.critic(batch_obs[0]).squeeze()
+            V = torch.clamp(self.critic(batch_obs[0]).squeeze(), -15, 15)
             batch_rtgs = A_k + V.detach()
 
             # Normalize advantages to decrease the variance of our advantages and 
@@ -352,7 +352,7 @@ class PPO:
 
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs
-        V = self.critic(batch_obs[0]).squeeze()
+        V = torch.clamp(self.critic(batch_obs[0]).squeeze(), -15, 15)
         # Calculate the log probabilities of batch actions using most
         # recent actor network
         # This segment of code is similar to that in get_action()
