@@ -14,15 +14,13 @@ class DQN(nn.Module):
             nn.Conv2d(32, 64, kernel_size=4, stride=2),
             nn.ReLU(),
             nn.Conv2d(64, 64, kernel_size=2, stride=1),
-            nn.ReLU()
+            nn.ReLU(),
         )
 
         conv_out_size = self._get_conv_out(input_shape)
 
         self.fc = nn.Sequential(
-            nn.Linear(conv_out_size, 512),
-            nn.ReLU(),
-            nn.Linear(512, n_actions)
+            nn.Linear(conv_out_size, 512), nn.ReLU(), nn.Linear(512, n_actions)
         )
 
     def _get_conv_out(self, shape):
@@ -34,11 +32,17 @@ class DQN(nn.Module):
         return self.fc(conv_out)
 
     def save(self, target: bool = False):
-        dir_path = "../trained_model/target" if target else "../trained_model/current"
+        dir_path = (
+            "../trained_model/target" if target else "../trained_model/current"
+        )
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         torch.save(self.state_dict(), dir_path + "_ddqn_model.pt")
 
     def load(self, device, target: bool = False):
-        dir_path = "../trained_model/target" if target else "../trained_model/current"
+        dir_path = (
+            "../trained_model/target" if target else "../trained_model/current"
+        )
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
-        self.load_state_dict(torch.load(dir_path + "_ddqn_model.pt", map_location=device))
+        self.load_state_dict(
+            torch.load(dir_path + "_ddqn_model.pt", map_location=device)
+        )

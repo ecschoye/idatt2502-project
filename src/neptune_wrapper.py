@@ -5,8 +5,8 @@ load_dotenv()
 import os
 import cv2
 
-NEPTUNE_API_KEY = os.getenv('NEPTUNE_API_TOKEN')
-NEPTUNE_PROJECT = os.getenv('NEPTUNE_PROJECT_NAME')
+NEPTUNE_API_KEY = os.getenv("NEPTUNE_API_TOKEN")
+NEPTUNE_PROJECT = os.getenv("NEPTUNE_PROJECT_NAME")
 
 
 class NeptuneModels:
@@ -37,11 +37,11 @@ class NeptuneModels:
             project=NEPTUNE_PROJECT,
             api_token=NEPTUNE_API_KEY,
         )
-        if (model_info != None):
+        if model_info != None:
             model["model"] = model_info
         model.stop()
 
-    def model_version(self, model_key, model_params, folders_to_track = None):
+    def model_version(self, model_key, model_params, folders_to_track=None):
         """
         Create a new version of a trained model.
         Give it the key of the existing model, the model_params used to train.
@@ -51,15 +51,15 @@ class NeptuneModels:
         Give a path to a saved binary, eg "model.pt"
         """
         model_version = neptune.init_model_version(
-            model = model_key,
-            project=NEPTUNE_PROJECT,
-            api_token=NEPTUNE_API_KEY
+            model=model_key, project=NEPTUNE_PROJECT, api_token=NEPTUNE_API_KEY
         )
         model_version["model/parameters"] = model_params
         if folders_to_track != None:
             for i in range(len(folders_to_track)):
                 print(folders_to_track[i])
-                model_version["model/dataset"].upload_files(folders_to_track[i])
+                model_version["model/dataset"].upload_files(
+                    folders_to_track[i]
+                )
         model_version.wait()
         model_version.stop()
 
@@ -69,7 +69,7 @@ class NeptuneRun:
     Wrapper class for interacting with neptune.ai API. Should be reinitialized
     """
 
-    def __init__(self, params, description = "", tags = []):
+    def __init__(self, params, description="", tags=[]):
         """
         Initializes a Neptune run with provided parameters, description, and tags.
 
@@ -84,8 +84,8 @@ class NeptuneRun:
         self.run = neptune.init_run(
             project=NEPTUNE_PROJECT,
             api_token=NEPTUNE_API_KEY,
-            description = description,
-            tags = tags
+            description=description,
+            tags=tags,
         )  # your credentials
         self.params = params
         self.run["parameters"] = self.params
@@ -104,7 +104,7 @@ class NeptuneRun:
         }
         """
         if metadata_dict != None:
-            for key in (metadata_dict):
+            for key in metadata_dict:
                 self.run[key].append(metadata_dict[key])
 
     def log_epoch(self, metadata_dict):
@@ -121,7 +121,7 @@ class NeptuneRun:
         }
         """
         if metadata_dict != None:
-            for key in (metadata_dict):
+            for key in metadata_dict:
                 self.run[key].append(metadata_dict[key])
 
     def log_lists(self, metadata_dict):
@@ -135,8 +135,15 @@ class NeptuneRun:
         index as a separate entry.
         """
         if metadata_dict != None:
-            for key in (metadata_dict):
-                self.run[key].extend([metadata_dict[key] for metadata_dict[key] in range(len(metadata_dict[key]))])
+            for key in metadata_dict:
+                self.run[key].extend(
+                    [
+                        metadata_dict[key]
+                        for metadata_dict[key] in range(
+                            len(metadata_dict[key])
+                        )
+                    ]
+                )
 
     def log_frames(self, frames, episode_number):
         """
@@ -151,14 +158,22 @@ class NeptuneRun:
         """
         x, y, z = frames[0].shape
         size = (y, x)
-        vid = cv2.VideoWriter('animation_{}.mp4'.format(episode_number), cv2.VideoWriter_fourcc(*'avc1'), 30, size, True)
+        vid = cv2.VideoWriter(
+            "animation_{}.mp4".format(episode_number),
+            cv2.VideoWriter_fourcc(*"avc1"),
+            30,
+            size,
+            True,
+        )
         for frame in frames:
             rgb_img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             vid.write(rgb_img)
         vid.release()
-        self.run["train/animation"].upload_files('animation_{}.mp4'.format(episode_number))
+        self.run["train/animation"].upload_files(
+            "animation_{}.mp4".format(episode_number)
+        )
         self.run.wait()
-        os.remove('animation_{}.mp4'.format(episode_number))
+        os.remove("animation_{}.mp4".format(episode_number))
 
     def finish(self):
         """
@@ -175,7 +190,5 @@ class NeptuneRun:
         Ensures that the Neptune run is stopped and resources are cleaned up when the NeptuneRun object is destroyed.
         This is a safeguard to stop the run in case it was not stopped manually.
         """
-        if (self.run.get_state != 'stopped'):
+        if self.run.get_state != "stopped":
             self.run.stop()
-
-

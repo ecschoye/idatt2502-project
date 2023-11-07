@@ -3,7 +3,6 @@ import cv2
 import gym
 import gym_super_mario_bros
 import numpy as np
-from src.neptune_wrapper import NeptuneRun
 from gym.utils.play import play
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
@@ -56,8 +55,12 @@ class DownsampleAndGreyscale(gym.ObservationWrapper):
             img = np.reshape(frame, [240, 256, 3]).astype(np.float32)
         else:
             assert False, "Unknown resolution."
-        img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
-        resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
+        img = (
+            img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
+        )
+        resized_screen = cv2.resize(
+            img, (84, 110), interpolation=cv2.INTER_AREA
+        )
 
         x_t = resized_screen[18:102, :]
         x_t = np.reshape(x_t, [84, 84, 1])
@@ -97,7 +100,9 @@ class BufferWrapper(gym.ObservationWrapper):
         )
 
     def reset(self):
-        self.buffer = np.zeros_like(self.observation_space.low, dtype=self.dtype)
+        self.buffer = np.zeros_like(
+            self.observation_space.low, dtype=self.dtype
+        )
         return self.observation(self.env.reset())
 
     def observation(self, observation):
@@ -138,7 +143,9 @@ class MarioEnvironment:
         for step in range(100):
             if done:
                 state = self.env.reset()
-            state, reward, done, info = self.env.step(self.env.action_space.sample())
+            state, reward, done, info = self.env.step(
+                self.env.action_space.sample()
+            )
 
             rewards.append(reward)
             frames.append(self.env.frame)

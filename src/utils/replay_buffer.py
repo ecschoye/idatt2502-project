@@ -2,7 +2,6 @@ import os
 import pickle
 import random
 
-import numpy as np
 import torch
 
 
@@ -22,7 +21,6 @@ class ReplayBuffer:
         self.actions = torch.zeros(memory_size, 1)
         self.rewards = torch.zeros(memory_size, 1)
         self.done_flags = torch.zeros(memory_size, 1)
-
 
     def add(self, state, action, reward, next_state, done):
         """
@@ -58,14 +56,20 @@ class ReplayBuffer:
         """
         dir_path = "../replay_buffer_data"
         os.makedirs(dir_path, exist_ok=True)
-        torch.save(self.states, os.path.join(dir_path, 'states.pt'))
-        torch.save(self.actions, os.path.join(dir_path, 'actions.pt'))
-        torch.save(self.rewards, os.path.join(dir_path, 'rewards.pt'))
-        torch.save(self.next_states, os.path.join(dir_path, 'next_states.pt'))
-        torch.save(self.done_flags, os.path.join(dir_path, 'done_flags.pt'))
+        torch.save(self.states, os.path.join(dir_path, "states.pt"))
+        torch.save(self.actions, os.path.join(dir_path, "actions.pt"))
+        torch.save(self.rewards, os.path.join(dir_path, "rewards.pt"))
+        torch.save(self.next_states, os.path.join(dir_path, "next_states.pt"))
+        torch.save(self.done_flags, os.path.join(dir_path, "done_flags.pt"))
 
-        with open(os.path.join(dir_path, 'counters.pkl'), 'wb') as f:
-            pickle.dump({'ending_position': self.ending_position, 'num_in_queue': self.num_in_queue}, f)
+        with open(os.path.join(dir_path, "counters.pkl"), "wb") as f:
+            pickle.dump(
+                {
+                    "ending_position": self.ending_position,
+                    "num_in_queue": self.num_in_queue,
+                },
+                f,
+            )
 
     def load(self):
         """
@@ -73,12 +77,12 @@ class ReplayBuffer:
         """
         dir_path = "../replay_buffer_data"
         os.makedirs(dir_path, exist_ok=True)
-        self.states = torch.load(os.path.join(dir_path, 'states.pt'))
-        self.actions = torch.load(os.path.join(dir_path, 'actions.pt'))
-        self.rewards = torch.load(os.path.join(dir_path, 'rewards.pt'))
-        self.next_states = torch.load(os.path.join(dir_path, 'next_states.pt'))
-        self.done_flags = torch.load(os.path.join(dir_path, 'done_flags.pt'))
-        with open(os.path.join(dir_path, 'counters.pkl'), 'rb') as f:
+        self.states = torch.load(os.path.join(dir_path, "states.pt"))
+        self.actions = torch.load(os.path.join(dir_path, "actions.pt"))
+        self.rewards = torch.load(os.path.join(dir_path, "rewards.pt"))
+        self.next_states = torch.load(os.path.join(dir_path, "next_states.pt"))
+        self.done_flags = torch.load(os.path.join(dir_path, "done_flags.pt"))
+        with open(os.path.join(dir_path, "counters.pkl"), "rb") as f:
             counters = pickle.load(f)
-            self.ending_position = counters['ending_position']
-            self.num_in_queue = counters['num_in_queue']
+            self.ending_position = counters["ending_position"]
+            self.num_in_queue = counters["num_in_queue"]
