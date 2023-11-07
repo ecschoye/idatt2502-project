@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 
 from ..model.dqn import DQN
-from ..utils.replay_buffer import ReplayBuffer
+from ..utils.experience_replay_buffer import ExperienceReplayBuffer
 
 
 class DDQNAgent:
@@ -49,7 +49,7 @@ class DDQNAgent:
         self.memory_size = memory_size
 
         # Memory and models
-        self.memory = ReplayBuffer(state_space, self.memory_size)
+        self.memory = ExperienceReplayBuffer(state_space, self.memory_size)
         self.local_model = DQN(self.state_space, self.action_space).to(
             self.device
         )

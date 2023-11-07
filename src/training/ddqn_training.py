@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 from src.agent.ddqn_agent import DDQNAgent
 from src.environment import create_mario_env
-from src.utils.replay_buffer import ReplayBuffer
+from src.utils.experience_replay_buffer import ExperienceReplayBuffer
 from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
 

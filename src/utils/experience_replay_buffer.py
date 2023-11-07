@@ -5,7 +5,7 @@ import random
 import torch
 
 
-class ReplayBuffer:
+class ExperienceReplayBuffer:
     def __init__(self, state_space, memory_size):
         """
         Initialize a replay buffer.
