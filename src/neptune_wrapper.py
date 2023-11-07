@@ -1,9 +1,8 @@
 import neptune
 from dotenv import load_dotenv
-
-load_dotenv()
 import os
 import cv2
+load_dotenv()
 
 NEPTUNE_API_KEY = os.getenv("NEPTUNE_API_TOKEN")
 NEPTUNE_PROJECT = os.getenv("NEPTUNE_PROJECT_NAME")
@@ -28,7 +27,8 @@ class NeptuneModels:
         model_name (str): A human-readable name for the model.
         model_info (dict, optional): Additional information about the model.
 
-        The method initializes a new model in Neptune with the given key, name, and optional
+        The method initializes a new model in Neptune
+        with the given key, name, and optional
         info, then stops the model's logger after creation.
         """
         model = neptune.init_model(
@@ -37,7 +37,7 @@ class NeptuneModels:
             project=NEPTUNE_PROJECT,
             api_token=NEPTUNE_API_KEY,
         )
-        if model_info != None:
+        if model_info is not None:
             model["model"] = model_info
         model.stop()
 
@@ -54,7 +54,7 @@ class NeptuneModels:
             model=model_key, project=NEPTUNE_PROJECT, api_token=NEPTUNE_API_KEY
         )
         model_version["model/parameters"] = model_params
-        if folders_to_track != None:
+        if folders_to_track is not None:
             for i in range(len(folders_to_track)):
                 print(folders_to_track[i])
                 model_version["model/dataset"].upload_files(
@@ -92,7 +92,8 @@ class NeptuneRun:
 
     def log_run(self, metadata_dict):
         """
-         Logs a given metadata for an entire run containing e.g. avg reward, avg loss etc.
+         Logs a given metadata for an entire run 
+         containing e.g. avg reward, avg loss etc.
         Call for a run if metadata is relevant to entire run.
         format:
         {
@@ -103,7 +104,7 @@ class NeptuneRun:
             "train/reward" : 1
         }
         """
-        if metadata_dict != None:
+        if metadata_dict is not None:
             for key in metadata_dict:
                 self.run[key].append(metadata_dict[key])
 
@@ -120,7 +121,7 @@ class NeptuneRun:
             "train/reward" : 1
         }
         """
-        if metadata_dict != None:
+        if metadata_dict is not None:
             for key in metadata_dict:
                 self.run[key].append(metadata_dict[key])
 
@@ -129,12 +130,14 @@ class NeptuneRun:
         Logs lists of data as metadata.
 
         Parameters:
-        metadata_dict (dict): A dictionary where each key corresponds to a list of data points to log.
+        metadata_dict (dict): A dictionary where each key 
+        corresponds to a list of data points to log.
 
-        The method extends the logged data for each key with the corresponding list of values, logging each
+        The method extends the logged data for each key 
+        with the corresponding list of values, logging each
         index as a separate entry.
         """
-        if metadata_dict != None:
+        if metadata_dict is not None:
             for key in metadata_dict:
                 self.run[key].extend(
                     [
@@ -147,8 +150,10 @@ class NeptuneRun:
 
     def log_frames(self, frames, episode_number):
         """
-        Creates a video from a list of frames representing one episode of the game and uploads it to the logging system.
-        Each video is named with the episode number to differentiate between different episodes. After uploading, the
+        Creates a video from a list of frames representing one episode
+        of the game and uploads it to the logging system.
+        Each video is named with the episode number to 
+        differentiate between different episodes. After uploading, the
         local video file is deleted to save space.
 
         Parameters:
@@ -179,7 +184,8 @@ class NeptuneRun:
         """
         Stops the neptune run, finalizing the logging process.
 
-        This method should be called when all logging for the run is complete and the run is ready to be closed.
+        This method should be called when all logging for the run 
+        is complete and the run is ready to be closed.
         """
         self.run.stop()
 
@@ -187,7 +193,8 @@ class NeptuneRun:
         """
         Destructor for the NeptuneRun class.
 
-        Ensures that the Neptune run is stopped and resources are cleaned up when the NeptuneRun object is destroyed.
+        Ensures that the Neptune run is stopped and resources are 
+        cleaned up when the NeptuneRun object is destroyed.
         This is a safeguard to stop the run in case it was not stopped manually.
         """
         if self.run.get_state != "stopped":
