@@ -173,8 +173,6 @@ def render_mario():
         env.close()
 
 
-
-
 def log_model_version():
     env = create_mario_env()
     state_space = env.observation_space.shape
@@ -200,11 +198,3 @@ def log_model_version():
         },
         ["../trained_model", "../replay_buffer_data"],
     )
-
-
-if __name__ == "__main__":
-    print("Starting training")
-    train_mario(log=True)
-    # train_mario(log="true")
-    # render_mario()
-    # log_model_version()

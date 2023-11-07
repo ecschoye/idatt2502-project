@@ -15,7 +15,8 @@ We chose to try a hardcore envoirement, and the envoirement we ended up with was
 Read more about the envoirement here: https://pypi.org/project/gym-super-mario-bros/
 
 ## Problems statement
-# ---- FILL IN FINAL PROBLEM STATEMENT ---REMOVE WHEN FINISHED
+Compareing the performence of DDQN and PPO in the evniroment Super Mario
+Bros.
 
 ## Requirements
 Here are the requirements to run the project:
@@ -56,13 +57,54 @@ cd venv/scripts && activate && cd .. && cd ..
 cd venv/bin && activate && cd .. && cd ..
 ```
 
+#### Train and render
+This function trains the ddqn.
+
+``` bash
+make ddqn
+```
+
+This function trains the ppo.
+
+``` bash
+make ppo
+```
+
+This function renders a trained model of ddqn.
+``` bash
+make render-ddqn
+```
+
+This function renders a trained model of ppo.
+``` bash
+make render-ppo
+```
+
+#### Options
+You can specify flags for both the ppo and ddqn to log the training to Neptun.
+You can use these args on both ppo and ddqn. The args can also be combined. 
+To specify flags for logging use the commands under:
+
+Logs the traning to make graphs
+```bash
+make ddqn args="--log"
+```
+
+Logs the model to make graphs
+```bash
+make ddqn args="--log-model"
+```
+
+Pyhton3 is set to standard and if your computer uses python instead of python3 you can overwrite this with the command under:
+
+```bash
+make ddqn PYTHON=python
+```
+
 #### Deactivate the envoirement with:
 ``` bash
 deactivate
 ```
-
-# --- FILL IN HOW TO RUN BOTH PPO AND DDQN -- REMOVE WHEN FINISHED
-Run the main.py file with the args ddqn or ppo...
 
 ### Cleanup
 This commands removes the virtual envoirment created in the setup section. You can also remove this manually.

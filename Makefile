@@ -31,6 +31,26 @@ endif
 clean: # Removes Virtual envoirement
 	$(RMDIR) $(VENV_NAME)
 
+.PHONY: ddqn
+ddqn: # To train ddqn
+	cd src && \
+    $(PYTHON) main.py ddqn ${args}
+
+.PHONY: ppo
+ppo: # To train ppo
+	cd src && \
+    $(PYTHON) main.py ppo ${args}
+
+.PHONY: render-ddqn
+render-ddqn: # To render trained ddqn
+	cd src && \
+    $(PYTHON) main.py render-ddqn
+
+.PHONY: render-ppo
+render-ppo: # To render trained ppo
+	cd src && \
+    $(PYTHON) main.py render-ddqn
+
 .PHONY: imports
 imports: # To fix import issue
 	cd $(VENV_PATH) && \
