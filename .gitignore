@@ -126,3 +126,6 @@ venv
 
 .idea
 .mp4
+
+.neptune
+.vscode
