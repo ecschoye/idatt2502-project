@@ -21,8 +21,8 @@ class DDQNAgent:
         gamma=0.90,
         epsilon=1.0,
         epsilon_min=0.01,
-        epsilon_decay=10**5,
-        copy=5000,
+        epsilon_decay_rate=10 ** 5,
+        target_update_frequency=5000,
         pretrained_path=None,
     ):
         # Environment
@@ -39,9 +39,9 @@ class DDQNAgent:
 
         # Hyperparameters
         self.batch_size = batch_size
-        self.copy = copy
+        self.target_update_frequency = target_update_frequency
         self.epsilon = epsilon
-        self.epsilon_decay = epsilon_decay
+        self.epsilon_decay_rate = epsilon_decay_rate
         self.epsilon_max = epsilon
         self.epsilon_min = epsilon_min
         self.gamma = gamma
@@ -56,8 +56,6 @@ class DDQNAgent:
         self.target_model = DQN(self.state_space, self.action_space).to(
             self.device
         )
-        self.ending_position = 0
-        self.num_in_queue = 0
         self.steps = 0
 
         # Load pretrained model
@@ -86,15 +84,15 @@ class DDQNAgent:
         """
         self.epsilon = self.epsilon_min + (
             self.epsilon_max - self.epsilon_min
-        ) * math.exp(-1 * ((self.steps + 1) / self.epsilon_decay))
+        ) * math.exp(-1 * ((self.steps + 1) / self.epsilon_decay_rate))
 
-    def increment_steps(self):
+    def increment_step_count(self):
         """
         Increments the number of steps taken by the agent.
         """
         self.steps += 1
 
-    def best_action(self, state):
+    def select_greedy_action(self, state):
         """
         Identifies the action with the highest Q-value for the given state.
 
@@ -123,7 +121,7 @@ class DDQNAgent:
         :return: The chosen action.
         """
         # Epsilon-greedy action selection
-        if random.random() <= self.epsilon:
+        if np.random.rand() < self.epsilon:
             # Random action
             action = np.random.randint(self.action_space)
         else:
@@ -133,17 +131,17 @@ class DDQNAgent:
             )
             action = torch.argmax(action_values).item()
 
-        self.increment_steps()
+        self.increment_step_count()
 
         return action
 
-    def store_experience(self, state, action, reward, next_state, done):
+    def add_experience_to_memory(self, state, action, reward, next_state, done):
         """
         Stores the experience in the replay buffer.
         """
         self.memory.add_experience(state, action, reward, next_state, done)
 
-    def update_q_value(self, reward, next_state, done):
+    def compute_target_q_value(self, reward, next_state, done):
         """
         Computes the updated Q-value for the current state
         using the reward and the next state.
@@ -170,7 +168,7 @@ class DDQNAgent:
         """
         self.target_model.load_state_dict(self.local_model.state_dict())
 
-    def experience_replay(self):
+    def learn_from_memory_batch(self):
         """
         Performs a single step of the experience replay algorithm.
 
@@ -181,7 +179,7 @@ class DDQNAgent:
         """
         # Check if it is time to update the target model
         # based on the copy parameter
-        if self.steps % self.copy == 0:
+        if self.steps % self.target_update_frequency == 0:
             # Update the target model
             self.update_target_model()
 
@@ -198,7 +196,7 @@ class DDQNAgent:
         self.optimizer.zero_grad()
 
         # Calculate the target Q values for the next state
-        target = self.update_q_value(reward, next_state, done_flag)
+        target = self.compute_target_q_value(reward, next_state, done_flag)
 
         # Predict the current Q values from the local model
         # using the sampled states and actions

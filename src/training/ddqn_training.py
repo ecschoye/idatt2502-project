@@ -33,11 +33,11 @@ def train_mario(pretrained=False, log=False):
                 "gamma": agent.gamma,
                 "epsilon": agent.epsilon,
                 "epsilon_min": agent.epsilon_min,
-                "epsilon_decay": agent.epsilon_decay,
+                "epsilon_decay": agent.epsilon_decay_rate,
                 "learning_rate": agent.lr,
                 "batch_size": agent.batch_size,
                 "memory_size": agent.memory_size,
-                "copy": agent.copy,
+                "copy": agent.target_update_frequency,
                 "action_space": agent.action_space,
                 "state_space": agent.state_space,
                 "num_episodes": num_episodes,
@@ -74,8 +74,8 @@ def train_mario(pretrained=False, log=False):
             action = torch.tensor([action], dtype=torch.long).unsqueeze(0)
             # print("Action shape:", action.shape)
 
-            agent.store_experience(state, action, reward, next_state, done)
-            agent.experience_replay()
+            agent.add_experience_to_memory(state, action, reward, next_state, done)
+            agent.learn_from_memory_batch()
 
             state = next_state
             if log:
@@ -160,7 +160,7 @@ def render_mario():
                 env.render()
                 time.sleep(0.05)
 
-                action = agent.best_action(state).item()
+                action = agent.select_greedy_action(state).item()
 
                 next_state, reward, done, info = env.step(action)
                 total_reward += reward
@@ -189,11 +189,11 @@ def log_model_version():
             "gamma": agent.gamma,
             "epsilon": agent.epsilon,
             "epsilon_min": agent.epsilon_min,
-            "epsilon_decay": agent.epsilon_decay,
+            "epsilon_decay": agent.epsilon_decay_rate,
             "learning_rate": agent.lr,
             "batch_size": agent.batch_size,
             "memory_size": agent.memory_size,
-            "copy": agent.copy,
+            "copy": agent.target_update_frequency,
             "action_space": agent.action_space,
             "state_space": agent.state_space,
             "num_episodes": num_episodes,
