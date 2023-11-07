@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 from src.agent.ddqn_agent import DDQNAgent
 from src.environment import create_mario_env
-from src.utils.replay_buffer import ReplayBuffer
+from src.utils.experience_replay_buffer import ExperienceReplayBuffer
 from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
 
@@ -142,7 +142,7 @@ def get_reward(done, step, reward, env):
 def render_mario():
     your_state_space = (4, 84, 84)
     your_memory_size = 20000
-    replay_buffer = ReplayBuffer(your_state_space, your_memory_size)
+    replay_buffer = ExperienceReplayBuffer(your_state_space, your_memory_size)
     replay_buffer.load()
     env = create_mario_env()
     env.reset()
