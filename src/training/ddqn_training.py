@@ -10,7 +10,7 @@ from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
 def train_mario(pretrained=False, log=False):
     print("Creating environment")
-    env = create_mario_env("SuperMarioBros-1-1-v0")
+    env = create_mario_env("SuperMarioBros-6-4-v0")
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
@@ -19,7 +19,7 @@ def train_mario(pretrained=False, log=False):
     if pretrained:
         agent.load()
 
-    num_episodes = 3700
+    num_episodes = 5000
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
@@ -140,28 +140,39 @@ def get_reward(done, step, reward, env):
 
 
 def render_mario():
-    your_state_space = (4, 84, 84)
-    your_memory_size = 20000
-    replay_buffer = ReplayBuffer(your_state_space, your_memory_size)
-    replay_buffer.load()
-    env = create_mario_env()
-    env.reset()
-    for state, action, reward, next_state, done_flag in zip(
-        replay_buffer.states,
-        replay_buffer.actions,
-        replay_buffer.rewards,
-        replay_buffer.next_states,
-        replay_buffer.done_flags,
-    ):
-        env.render()
-        action = action.item()
-        next_state, reward, done, info = env.step(action)
-        time.sleep(0.05)
+    env = create_mario_env("SuperMarioBros-6-4-v0")
+    state_space = env.observation_space.shape
+    action_space = env.action_space.n
 
-        if done:
-            env.reset()
+    agent = DDQNAgent(env, state_space, action_space)
 
-    env.close()
+    agent.load()
+
+    try:
+        while True:
+            state = env.reset()
+            state = torch.tensor(np.array([state]), dtype=torch.float32)
+
+            total_reward = 0
+            done = False
+
+            while not done:
+                env.render()
+                time.sleep(0.05)
+
+                action = agent.best_action(state).item()
+
+                next_state, reward, done, info = env.step(action)
+                total_reward += reward
+
+                state = torch.tensor(np.array([next_state]), dtype=torch.float32)
+
+            print("Total reward achieved:", total_reward)
+    except KeyboardInterrupt:
+        print("Rendering stopped by the user.")
+        env.close()
+
+
 
 
 def log_model_version():
