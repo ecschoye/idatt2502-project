@@ -141,7 +141,7 @@ class DDQNAgent:
         """
         Stores the experience in the replay buffer.
         """
-        self.memory.add(state, action, reward, next_state, done)
+        self.memory.add_experience(state, action, reward, next_state, done)
 
     def update_q_value(self, reward, next_state, done):
         """
@@ -186,11 +186,11 @@ class DDQNAgent:
             self.update_target_model()
 
         # Check if there are enough samples in memory
-        if self.memory.num_in_queue < self.batch_size:
+        if self.memory.size < self.batch_size:
             return
 
         # Sample a batch of experiences from the memory
-        state, action, reward, next_state, done_flag = self.memory.sample(
+        state, action, reward, next_state, done_flag = self.memory.sample_batch(
             self.batch_size, self.device
         )
 

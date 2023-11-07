@@ -10,7 +10,7 @@ from src.neptune_wrapper import NeptuneModels, NeptuneRun
 
 def train_mario(pretrained=False, log=False):
     print("Creating environment")
-    env = create_mario_env("SuperMarioBros-6-4-v0")
+    env = create_mario_env("SuperMarioBros-1-1-v0")
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
