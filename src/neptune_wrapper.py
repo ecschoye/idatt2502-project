@@ -92,7 +92,7 @@ class NeptuneRun:
 
     def log_run(self, metadata_dict):
         """
-         Logs a given metadata for an entire run 
+         Logs a given metadata for an entire run
          containing e.g. avg reward, avg loss etc.
         Call for a run if metadata is relevant to entire run.
         format:
@@ -130,10 +130,10 @@ class NeptuneRun:
         Logs lists of data as metadata.
 
         Parameters:
-        metadata_dict (dict): A dictionary where each key 
+        metadata_dict (dict): A dictionary where each key
         corresponds to a list of data points to log.
 
-        The method extends the logged data for each key 
+        The method extends the logged data for each key
         with the corresponding list of values, logging each
         index as a separate entry.
         """
@@ -152,7 +152,7 @@ class NeptuneRun:
         """
         Creates a video from a list of frames representing one episode
         of the game and uploads it to the logging system.
-        Each video is named with the episode number to 
+        Each video is named with the episode number to
         differentiate between different episodes. After uploading, the
         local video file is deleted to save space.
 
@@ -183,8 +183,7 @@ class NeptuneRun:
     def finish(self):
         """
         Stops the neptune run, finalizing the logging process.
-
-        This method should be called when all logging for the run 
+        This method should be called when all logging for the run
         is complete and the run is ready to be closed.
         """
         self.run.stop()
@@ -192,8 +191,7 @@ class NeptuneRun:
     def __del__(self):
         """
         Destructor for the NeptuneRun class.
-
-        Ensures that the Neptune run is stopped and resources are 
+        Ensures that the Neptune run is stopped and resources are
         cleaned up when the NeptuneRun object is destroyed.
         This is a safeguard to stop the run in case it was not stopped manually.
         """
