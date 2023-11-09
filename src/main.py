@@ -16,7 +16,6 @@ if __name__ == "__main__":
 
     if args.option == "ddqn":
         print("DDQN")
-        print(args.log)
         train_mario(log=args.log)
         if args.log_model:
             print("Log model")
