@@ -30,7 +30,7 @@ def main():
     Main Function to run training or testing
     """
 
-    env = create_mario_env()
+    env = create_mario_env("SuperMarioBros-1-1-v0")
     env.metadata['render-modes']="human"
 
     print(STRINGS["menu"], flush=True)

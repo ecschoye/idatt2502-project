@@ -57,11 +57,13 @@ class PPO:
             "delta_t": time.time_ns(),
             "t_so_far": 0,  # timesteps so far
             "i_so_far": 0,  # iterations so far
+            "n_episodes": 0, #Number of episodes
             "best_run_rews": 0.0, # Returns of best episode 
             "batch_lens": [],  # episodic lengths in batch
             "batch_rews": [],  # episodic returns in batch
             "actor_losses": [],  # losses of actor network in current iteration
             "lr" : [], # learning rates 
+            "flags": [], # Flags caught
         }
         self.best_run_frames = []
 
@@ -268,7 +270,7 @@ class PPO:
                         and len(batch_lens) == 0
                     )
                 ):self.env.render()
-
+    
                 ep_dones.append(done)
                 
                 t += 1 # Increment timesteps ran this batch so far
@@ -278,7 +280,8 @@ class PPO:
                 action, log_prob = self.get_action(obs)
                 val = self.critic(obs)
 
-                obs, rew, done, _ = self.env.step(action)
+                obs, rew, done, info = self.env.step(action)
+                
                 if self.capture_frames:
                     ep_frames.append(self.env.frame)
                 # Collect reward, action and log probability
@@ -288,6 +291,8 @@ class PPO:
                 batch_log_probs.append(log_prob)
 
                 if done:
+                    if info['flag_get']:
+                        self.logger['flags'] = self.logger['flags'] + 1
                     break
 
             # Collect episodic length and rewards
@@ -379,6 +384,7 @@ class PPO:
         t_so_far = self.logger['t_so_far']
         i_so_far = self.logger['i_so_far']
         lr = self.logger['lr']
+        flags = self.logger["flags"]
         best_run_rews = self.logger['best_run_rews']
         avg_ep_lens = np.mean(self.logger['batch_lens'])
         avg_ep_rews = np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])
@@ -402,6 +408,7 @@ class PPO:
         print(f"Iteration took: {delta_t} secs", flush=True)
         print(f"Learning rate: {lr}", flush=True)
         print(f"Length of best run: {len(self.best_run_frames)}", flush=True)
+        print(f"Flags and number of episodes: {flags}/{len(self.logger['batch_lens'])}")
         print(f"------------------------------------------------------", flush=True)
         print(flush=True)
 
@@ -410,6 +417,7 @@ class PPO:
         self.logger['batch_rews'] = []
         self.logger['actor_losses'] = []
         self.logger['lr'] = []
+        self.logger['flags'] = 0
 
     def log_epoch(self):
         self.neptune_logger.log_epoch({
@@ -420,4 +428,6 @@ class PPO:
             "train/timesteps_so_far": self.logger['t_so_far'],
             "train/time_consumed": round((time.time_ns()-self.logger['delta_t']) / 1e9, 2),
             "train/learning_rate": self.logger['lr'],
+            "train/flags": self.logger['flags'],
+            "traing/n_episodes": len(self.logger['batch_lens'])
         })
