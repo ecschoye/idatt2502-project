@@ -36,11 +36,19 @@ else
 endif
 
 
-.PHONY: clean
 clean: ## Removes Virtual environment
-	$(RMDIR) $(VENV_NAME)
-	cd src && \
-	$(RMDIR) __pycache__
+ifeq ($(OS),Windows_NT)
+	@if exist "$(VENV_NAME)" ($(RMDIR) $(VENV_NAME))
+	@if exist "src\__pycache__" (cd src && $(RMDIR) __pycache__)
+else
+	@if [ -d "$(VENV_NAME)" ]; then \
+		$(RMDIR) $(VENV_NAME); \
+	fi
+	@if [ -d "src/__pycache__" ]; then \
+		cd src && $(RMDIR) __pycache__; \
+	fi
+endif
+
 
 .PHONY: ddqn
 ddqn: ## To train ddqn
