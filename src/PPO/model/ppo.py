@@ -127,9 +127,8 @@ class PPO:
 
             # Calculate V_{phi, k}
             A_k = self.calculate_gae(batch_rews, batch_vals, batch_dones)
-            V = torch.clamp(self.critic(batch_obs[0]).squeeze(), -15, 15)
+            V = self.critic(batch_obs).squeeze()
             batch_rtgs = A_k + V.detach()
-
             # Normalize advantages to decrease the variance of our advantages and 
             # convergence more stable and faster
             A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
@@ -261,9 +260,10 @@ class PPO:
                 batch_obs.append(obs) # Collect observation
 
                 # Calculate action and make step
-                action, log_prob = self.get_action(obs)
-                val = self.critic(obs)
 
+                action, log_prob = self.get_action(obs)
+                obs1 = torch.tensor(obs,dtype=torch.float).to(self.device)
+                val = self.critic(obs1.unsqueeze(0))
                 obs, rew, done, info = self.env.step(action)
                 
                 if self.capture_frames:
@@ -327,19 +327,18 @@ class PPO:
     def get_action(self, obs):
         # Query the actor network for a mean action.
         obs = torch.tensor(obs,dtype=torch.float).to(self.device)
-        action_probs = F.softmax(self.actor(obs.to(self.device)), dim=1).to(self.device)
-        action_dist = Categorical(action_probs)
+        action_probs = F.softmax(self.actor(obs.unsqueeze(0).to(self.device)), dim=-1).to(self.device)[0]
+        action = torch.multinomial(action_probs, num_samples=1)
         # Sample an action from the distribution and get its log probability
-        action = action_dist.sample()
-
-        return action.item(), action_dist.log_prob(action).to(self.device)
+        log_prob = torch.log(action_probs[action])
+        return action.item(), log_prob.detach().to(self.device)
 
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs
-        V = torch.clamp(self.critic(batch_obs[0]).squeeze(), -15, 15)
+        V = self.critic(batch_obs).squeeze()
         # Calculate the log probabilities of batch actions using most
         # recent actor network
-        action_prob = F.softmax(self.actor(batch_obs[0]), dim=1).to(self.device)
+        action_prob = F.softmax(self.actor(batch_obs), dim=1).to(self.device)
         action_dist = Categorical(action_prob)
         log_probs = action_dist.log_prob(batch_acts).to(self.device)
 
@@ -363,11 +362,11 @@ class PPO:
             """)
 
     def log_epoch(self):
-        self.neptune_logger.log_frames(self.logger["best_batch_frames"], self.logger["n_episodes"])
+        self.neptune_logger.log_frames(self.logger["batch_best_frames"], self.logger["n_episodes"])
         self.neptune_logger.log_lists({
             "train/episode_rewards": self.logger["batch_rews"],
             "train/episode_lengths": self.logger["batch_lens"],
-            "train/episode_best_rewards": self.logger["best_batch_rews"],
+            "train/episode_best_rewards": self.logger["batch_best_rews"],
             "train/actor_loss": self.logger["actor_losses"],
         })
         self.neptune_logger.log_epoch({
