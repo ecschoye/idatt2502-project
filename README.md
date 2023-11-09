@@ -42,12 +42,6 @@ Pyhton3 is set to standard and if your computer uses python instead of python3 y
 make setup PYTHON=python
 ```
 
-You may encounter an issue where imports are not working as they should. All you need to is use this command:
-
-```bash
-make imports
-```
-
 ### Run
 Make sure that you use the virtueal envoirement created in the setup section.
 #### To activate the envoirement in commandline:

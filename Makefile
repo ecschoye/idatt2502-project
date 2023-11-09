@@ -25,7 +25,8 @@ setup: # Makes virtual envoirement and installs requirements
 ifeq ($(OS),Windows_NT)
 	cd $(VENV_PATH) && \
 	activate && \
-	$(PIP) install -r $(REQUIREMENTS_FILE)
+	cd .. && cd .. && \
+	$(PIP) install -r $(REQUIREMENTS_FILE) && \
 	$(TORCH_INSTALL_CMD)
 else
 	$(VENV_PATH) && \
@@ -56,17 +57,6 @@ render-ddqn: # To render trained ddqn
 render-ppo: # To render trained ppo
 	cd src && \
     $(PYTHON) main.py render-ddqn
-
-.PHONY: imports
-imports: # To fix import issue
-ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-    $(PIP) install -e .
-else
-	$(VENV_PATH) && \
-    $(PIP) install -e .
-endif
 
 .PHONY: format
 format: ## Format code and imports
