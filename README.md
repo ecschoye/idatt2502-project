@@ -15,8 +15,8 @@ We chose to try a hardcore envoirement, and the envoirement we ended up with was
 Read more about the envoirement here: https://pypi.org/project/gym-super-mario-bros/
 
 ## Problems statement
-Compareing the performence of DDQN and PPO in the evniroment Super Mario
-Bros.
+Compare the performence of DDQN and PPO in the Super Mario
+Bros evniroment.
 
 ## Requirements
 Here are the requirements to run the project:
