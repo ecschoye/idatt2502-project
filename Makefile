@@ -3,7 +3,8 @@ REQUIREMENTS_FILE = requirements.txt
 PYTHON ?= python3
 DARWIN = Darwin
 ifeq ($(OS),Windows_NT)
-    VENV_PATH = $(VENV_NAME)\Scripts
+    VENV_PATH = .\$(VENV_NAME)\Scripts
+    ACTIVATE_VENV = $(VENV_PATH)\activate
     RMDIR = rmdir /s /q
     PIP = pip
 else
@@ -21,11 +22,11 @@ endif
 
 .PHONY: setup
 setup: ## Makes virtual environment and installs requirements
-	$(PYTHON) -m venv $(VENV_NAME)
+	$(PYTHON) -m venv $(VENV_NAME) && \
+    @echo "Creating virtual environment..."
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	@echo "Setting up in Windows environment..."
+	$(ACTIVATE_VENV) && \
 	$(PIP) install -r $(REQUIREMENTS_FILE) && \
 	$(TORCH_INSTALL_CMD)
 else
@@ -33,6 +34,7 @@ else
 	$(PIP) install -r $(REQUIREMENTS_FILE) && \
 	$(TORCH_INSTALL_CMD)
 endif
+
 
 .PHONY: clean
 clean: ## Removes Virtual environment
@@ -43,9 +45,7 @@ clean: ## Removes Virtual environment
 .PHONY: ddqn
 ddqn: ## To train ddqn
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py ddqn ${args} && \
 	deactivate
@@ -59,9 +59,7 @@ endif
 .PHONY: ppo
 ppo: ## To train ppo
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py ppo ${args} && \
 	deactivate
@@ -75,9 +73,7 @@ endif
 .PHONY: render-ddqn
 render-ddqn: ## To render trained ddqn
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py render-ddqn && \
 	deactivate
@@ -91,9 +87,7 @@ endif
 .PHONY: render-ppo
 render-ppo: ## To render trained ppo
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py render-ppo && \
 	deactivate
@@ -110,9 +104,7 @@ format: black isort ## Format code and imports
 .PHONY: check
 check: ## Check formatting, imports, and linting
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	black --check src && \
 	isort --check-only src && \
 	flake8 --max-line-length 88 src && \
@@ -128,9 +120,7 @@ endif
 .PHONY: black
 black: ## Format code only
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	black src && \
 	deactivate
 else
@@ -142,9 +132,7 @@ endif
 .PHONY: isort
 isort: ## Format imports only
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	isort --check src && \
 	deactivate
 else
@@ -156,9 +144,7 @@ endif
 .PHONY: flake8
 flake8: ## Check code style
 ifeq ($(OS),Windows_NT)
-	cd $(VENV_PATH) && \
-	activate && \
-	cd .. && cd .. && \
+	$(ACTIVATE_VENV) && \
 	flake8 --max-line-length 88 src && \
 	deactivate
 else
