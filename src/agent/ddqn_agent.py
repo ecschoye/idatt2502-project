@@ -127,7 +127,7 @@ class DDQNAgent:
         else:
             # Greedy action
             action_values = self.local_model(
-                torch.tensor(state, dtype=torch.float32, device=self.device)
+                state.to(dtype=torch.float32, device=self.device)
             )
             action = torch.argmax(action_values).item()
 
