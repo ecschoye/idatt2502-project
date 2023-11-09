@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+import numpy as np
 
 class DiscreteActorCriticNN(nn.Module):
     def __init__(self, in_dim, out_dim):
@@ -28,7 +28,8 @@ class DiscreteActorCriticNN(nn.Module):
         return int(o.view(1, -1).size(1))
 
     def forward(self, state):
-        x = torch.tensor(state, dtype=torch.float).unsqueeze(0).to(self.device)
+        x = torch.tensor(state, dtype=torch.float).to(self.device)
         x = self.conv(x)
         x = x.view(x.size(0), -1)
         return self.fc(x)
+

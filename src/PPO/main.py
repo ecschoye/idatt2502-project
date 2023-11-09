@@ -23,7 +23,7 @@ STRINGS = {
     "run_finished" : "Training run finished",
     "training_loop": "Starting training loop"
 }
-TIMESTEPS = 300_000
+TIMESTEPS = 500_000
 
 def main():
     """
@@ -51,14 +51,13 @@ def main():
 
 def train_loop(env, parameters, notes):
     parameters['run_notes'] = str("\"" + notes + "\"")
-    ITERATIONS = 8
+    ITERATIONS = 6
     print(STRINGS["training_loop"], flush=True)
     for i in range(ITERATIONS): 
         print(STRINGS["run_starting"], flush=True)
         model = PPO(env, parameters)
-        if i != 0:
-            model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
-            model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        model.actor.load_state_dict(torch.load(ACTOR_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        model.critic.load_state_dict(torch.load(CRITIC_PATH, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
         model.learn(TIMESTEPS)
         print(STRINGS["run_finished"], flush=True)
         
@@ -68,8 +67,8 @@ def train(env, actor_model, critic_model, parameters, notes):
     model = PPO(env, parameters)
     if actor_model != "" and critic_model != "":
         print(STRINGS["loading_agents"], flush=True)
-        model.actor.load_state_dict(torch.load(actor_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
-        model.critic.load_state_dict(torch.load(critic_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        #model.actor.load_state_dict(torch.load(actor_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        #model.critic.load_state_dict(torch.load(critic_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
         print(STRINGS["loading_success"], flush=True)
     else:
         print(STRINGS["from_scratch"], flush=True)

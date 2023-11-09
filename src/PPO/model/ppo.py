@@ -10,12 +10,8 @@ import torch.nn.functional as F
 from ..network.network import DiscreteActorCriticNN
 from src.neptune_wrapper import NeptuneRun
 
-class PPO:
+class PPO: 
     def __init__(self, env, hyperparameters=None):
-        # Environment compatability
-        assert type(env.observation_space) is gym.spaces.Box
-        assert type(env.action_space) is gym.spaces.Discrete
-
         self._init_hyperparameters(hyperparameters)
 
         # Extract environment information
@@ -24,7 +20,6 @@ class PPO:
         self.act_dim = env.action_space.n
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(f"Running on {self.device.type}")
 
         # Initialize actor and critic networks
         self.actor = DiscreteActorCriticNN(self.obs_dim, self.act_dim).to(self.device)
@@ -38,33 +33,38 @@ class PPO:
         if hyperparameters.get("log", False):
             self.neptune_logger = NeptuneRun(
                 params = {
-                    "gamma": self.gamma,
-                    "n_updates_per_iteration": self.n_updates_per_iteration,
+                    "action_space" : self.act_dim,
                     "clip": self.clip,
-                    "lr": self.lr,
-                    "num_minibatches": self.num_minibatches,
-                    "lam": self.lam,
                     "ent_coef": self.ent_coef,
+                    "gamma": self.gamma,
+                    "lambda": self.lam,
+                    "lr": self.lr,
                     "max_grad_norm": self.max_grad_norm,
-                    "target_kl": self.target_kl,
-                    "timesteps_per_batch": self.timesteps_per_batch,
                     "max_timesteps_per_episode": self.max_timesteps_per_episode,
+                    "n_updates_per_iteration": self.n_updates_per_iteration,
+                    "num_minibatches": self.num_minibatches,
+                    "target_kl": self.target_kl,
+                    "timesteps_per_batch": self.timesteps_per_batch,  
                 },
-                description="PPO Test Run: " + hyperparameters['run_notes'],
+                description="PPO Train Run: " + hyperparameters['run_notes'],
                 tags=["PPO"]
                 )
         self.logger = {
             "delta_t": time.time_ns(),
-            "t_so_far": 0,  # timesteps so far
-            "i_so_far": 0,  # iterations so far
-            "best_run_rews": 0.0, # Returns of best episode 
-            "batch_lens": [],  # episodic lengths in batch
-            "batch_rews": [],  # episodic returns in batch
-            "actor_losses": [],  # losses of actor network in current iteration
+            # Per Run 
             "lr" : [], # learning rates 
-            "ent_coef": [], # entropy coefficients
+            "i_so_far": 0,
+            "t_so_far": 0,  # timesteps so far
+            "n_episodes": 0, #Number of episodes
+            "kl_divergence_breaks": 0, # Number of times KL-divergence breaks
+            "flags": 0, # Flags caught
+            # Per Batch 
+            "batch_lens": [],  # Episodic lengths in batch
+            "batch_rews": [],  # Episodic returns in batch
+            "batch_best_rews": 0.0, # Best episodic returns in batch
+            "batch_best_frames": [], # Best frames in batch
+            "batch_actor_loss": [], # Losses of actor network in batch
         }
-        self.best_run_frames = []
 
     def _init_hyperparameters(self, hyperparameters):
         """ 
@@ -100,19 +100,14 @@ class PPO:
         if hyperparameters is not None:
             for param, val in hyperparameters.items():
                 exec ("self." + param + " = " + str(val))
-        self.ent_coef_init = self.ent_coef
 
     def learn(self, total_timesteps):
         """
-            Train the actor and critic networks.
-
-            Parameters:   
-                total_timesteps - The total number of timesteps to train for
-    
+                Train the actor and critic networks.
         """
         t_so_far = 0  # Timesteps simulated so far
-        i_so_far = 0  # Iterations so far
-        
+        i_so_far = 0  # Iterations so far 
+
         while t_so_far < total_timesteps:
             # Gather data from rollout of batch
             (
@@ -125,16 +120,15 @@ class PPO:
                 batch_dones
             ) = self.rollout()
 
+            self.logger["t_so_far"] = t_so_far
+            self.logger["i_so_far"] = i_so_far
             t_so_far += np.sum(batch_lens) # Calculate how many timesteps we collected this batch
             i_so_far += 1 # Increment the number of iterations
-            self.logger["t_so_far"] = t_so_far # Logging timesteps so far and iterations so far
-            self.logger["i_so_far"] = i_so_far
 
             # Calculate V_{phi, k}
             A_k = self.calculate_gae(batch_rews, batch_vals, batch_dones)
-            V = self.critic(batch_obs[0]).squeeze()
+            V = self.critic(batch_obs).squeeze()
             batch_rtgs = A_k + V.detach()
-
             # Normalize advantages to decrease the variance of our advantages and 
             # convergence more stable and faster
             A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
@@ -149,16 +143,11 @@ class PPO:
                 # Introducing dynamic learining rate that decreases as the training advances
                 frac = (t_so_far - 1.0) / (4 * total_timesteps)
                 new_lr = self.lr * (1.0 - frac)
-                new_ent_coef = self.ent_coef_init * (1.0 - frac)
-
-                # Learning rate never below zero
                 new_lr = max(new_lr, 0.000001)
-                new_ent_coef = max(new_ent_coef, 0.000001)
-                self.ent_coef = new_ent_coef
+
                 self.actor_optim.param_groups[0]["lr"] = new_lr 
                 self.critic_optim.param_groups[0]["lr"] = new_lr  
-                self.logger['lr'] = new_lr 
-                self.logger['ent_coef'] = new_ent_coef
+                self.logger['lr'] = new_lr
 
                 np.random.shuffle(inds)
                 for start in range(0, step, minibatch_size):
@@ -201,19 +190,18 @@ class PPO:
                     self.critic_optim.step()
 
                     loss.append(actor_loss.detach())
-                
                 # Approximating KL divergence
                 if approx_kl > self.target_kl: 
+                    self.logger["kl_divergence_breaks"] += 1
                     break
+            
+            self.logger["actor_losses"] = loss
+            self.logger["n_episodes"] += len(batch_lens)
 
-            # Log actor loss
-            avg_loss = sum(loss) / len(loss)
-            self.logger["actor_losses"].append(avg_loss)
-
-            # Push run to Neptune if log = True
             if self.log: 
                 self.log_epoch()
             self._print_summary()
+            self.reset_batch_log()
 
             del batch_obs, batch_acts, batch_log_probs, batch_rews, batch_lens, batch_vals, batch_dones
 
@@ -221,23 +209,14 @@ class PPO:
                 print("Saving")
                 torch.save(self.actor.state_dict(), "./src/PPO/network/ppo_actor.pth")
                 torch.save(self.critic.state_dict(), "./src/PPO/network/ppo_critic.pth")
-        if self.log: 
-            self.close_logger()
+            
+        self.neptune_logger.finish()
+
 
     def rollout(self):
         gc.collect()
         """
-        Batch data and sizes: 
-            
-            batch operations: (number of timesteps per batch, dimension of observation)
-            batch actions: (number of timesteps per batch, dimension of action)
-            log probabilities of each action: (number of timesteps per batch)
-            batch rewards: (number of episodes, number of timesteps per episode)
-            batch rewards-to-go: (number of timesteps per batch)
-            episodic lengths in batch: (number of episodes)
-            batch state values: (number of timesteps per batch)
-            batch dones: (number of timesteps per batch)
-            
+        Rollout the policy and collect data for a single batch.
         """
         batch_obs = []
         batch_acts = []
@@ -246,17 +225,13 @@ class PPO:
         batch_lens = []  
         batch_vals = []   
         batch_dones= []
-        ep_best = 0  
-        ep_best_frames = []
-        ep_rews = []
-        ep_vals = []
-        ep_dones = []
+        batch_best_frames = []
+        batch_best_rews = 0
+        batch_flags = 0
 
-        # Number of timesteps run so far this batch
         t = 0
 
         while t < self.timesteps_per_batch:
-            # Rewards, vals, dones this episode
             ep_rews = []
             ep_vals = []
             ep_dones = []
@@ -266,6 +241,9 @@ class PPO:
             obs = self.env.reset()
             done = False
 
+            """
+                Run an episode for a maximum of max_timesteps_per_episode timesteps
+            """
             for ep_t in range(self.max_timesteps_per_episode):
                 if ( # Render conditions 
                     self.full_render or (
@@ -274,26 +252,30 @@ class PPO:
                         and len(batch_lens) == 0
                     )
                 ):self.env.render()
-
-                ep_dones.append(done)
+    
+                
                 
                 t += 1 # Increment timesteps ran this batch so far
+                ep_dones.append(done)
                 batch_obs.append(obs) # Collect observation
 
                 # Calculate action and make step
-                action, log_prob = self.get_action(obs)
-                val = self.critic(obs)
 
-                obs, rew, done, _ = self.env.step(action)
+                action, log_prob = self.get_action(obs)
+                obs1 = torch.tensor(obs,dtype=torch.float).to(self.device)
+                val = self.critic(obs1.unsqueeze(0))
+                obs, rew, done, info = self.env.step(action)
+                
                 if self.capture_frames:
                     ep_frames.append(self.env.frame)
-                # Collect reward, action and log probability
                 ep_rews.append(rew)
                 ep_vals.append(val.flatten())
                 batch_acts.append(action)
                 batch_log_probs.append(log_prob)
 
                 if done:
+                    if info['flag_get']:
+                        batch_flags += 1
                     break
 
             # Collect episodic length and rewards
@@ -302,10 +284,10 @@ class PPO:
             batch_vals.append(ep_vals)
             batch_dones.append(ep_dones)
 
-            if np.sum(ep_rews) > ep_best:
-                ep_best = np.sum(ep_rews)
+            if np.sum(ep_rews) > batch_best_rews:
+                batch_best_rews = np.sum(ep_rews)
                 if self.capture_frames: 
-                    ep_best_frames = ep_frames
+                    batch_best_frames = ep_frames
 
         # Reshape data as tensors in the shape specified before returning
         batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
@@ -317,10 +299,8 @@ class PPO:
         # Log the episodic returns and episodic lengths in this batch.
         self.logger["batch_rews"] = batch_rews
         self.logger["batch_lens"] = batch_lens
-        if ep_best > self.logger["best_run_rews"]:
-            self.logger["best_run_rews"] = ep_best
-            if self.capture_frames: 
-                    self.best_run_frames = ep_best_frames
+        self.logger["batch_best_rews"] = batch_best_rews
+        self.logger["batch_best_frames"] = batch_best_frames
 
         # Return batch data
         return batch_obs, batch_acts, batch_log_probs, batch_rews, batch_lens, batch_vals, batch_dones
@@ -346,85 +326,60 @@ class PPO:
 
     def get_action(self, obs):
         # Query the actor network for a mean action.
-        # Same as calling self.actor.forward(obs)
         obs = torch.tensor(obs,dtype=torch.float).to(self.device)
-        action_probs = F.softmax(self.actor(obs.to(self.device)), dim=1).to(self.device)
-        # Multivariate Normal Distribution
-        action_dist = Categorical(action_probs)
+        action_probs = F.softmax(self.actor(obs.unsqueeze(0).to(self.device)), dim=-1).to(self.device)[0]
+        action = torch.multinomial(action_probs, num_samples=1)
         # Sample an action from the distribution and get its log probability
-        action = action_dist.sample()
-
-        return action.item(), action_dist.log_prob(action).to(self.device)
+        log_prob = torch.log(action_probs[action])
+        return action.item(), log_prob.detach().to(self.device)
 
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs
-        V = self.critic(batch_obs[0]).squeeze()
+        V = self.critic(batch_obs).squeeze()
         # Calculate the log probabilities of batch actions using most
         # recent actor network
-        # This segment of code is similar to that in get_action()
-        action_prob = F.softmax(self.actor(batch_obs[0]), dim=1).to(self.device)
+        action_prob = F.softmax(self.actor(batch_obs), dim=1).to(self.device)
         action_dist = Categorical(action_prob)
         log_probs = action_dist.log_prob(batch_acts).to(self.device)
 
         return V, log_probs, action_dist.entropy()
 
-    def close_logger(self): 
-        self.neptune_logger.log_frames(self.best_run_frames)
-        self.neptune_logger.finish()
-
     def _print_summary(self):
-
-        # Calculate logging values. I use a few python shortcuts to calculate each value
-        # without explaining since it's not too important to PPO; feel free to look it over,
-        # and if you have any questions you can email me (look at bottom of README)
-        delta_t = self.logger['delta_t']
-        self.logger['delta_t'] = time.time_ns()
-        delta_t = (self.logger['delta_t'] - delta_t) / 1e9
-        delta_t = str(round(delta_t, 2))
-
-        t_so_far = self.logger['t_so_far']
-        i_so_far = self.logger['i_so_far']
-        lr = self.logger['lr']
-        best_run_rews = self.logger['best_run_rews']
-        avg_ep_lens = np.mean(self.logger['batch_lens'])
-        avg_ep_rews = np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])
-        avg_actor_loss = np.mean([losses.float().mean().cpu() for losses in self.logger['actor_losses']])
-
-        # Round decimal places for more aesthetic logging messages
-        avg_ep_lens = str(round(avg_ep_lens, 2))
-        avg_ep_rews = str(round(avg_ep_rews, 2))
-        best_run_rews = str(round(best_run_rews, 2))
-        avg_actor_loss = str(round(avg_actor_loss, 5))
-        lr = str(round(lr, 5))
-
-        # Print logging statements
-        print(flush=True)
-        print(f"-------------------- Iteration #{i_so_far} --------------------", flush=True)
-        print(f"Average Episodic Length: {avg_ep_lens}", flush=True)
-        print(f"Average Episodic Return: {avg_ep_rews}", flush=True)
-        print(f"Best Episode Return: {best_run_rews}", flush=True)
-        print(f"Average Loss: {avg_actor_loss}", flush=True)
-        print(f"Timesteps So Far: {t_so_far}", flush=True)
-        print(f"Iteration took: {delta_t} secs", flush=True)
-        print(f"Learning rate: {lr}", flush=True)
-        print(f"Length of best run: {len(self.best_run_frames)}", flush=True)
-        print(f"------------------------------------------------------", flush=True)
-        print(flush=True)
-
-        # Reset batch-specific logging data
-        self.logger['batch_lens'] = []
-        self.logger['batch_rews'] = []
-        self.logger['actor_losses'] = []
-        self.logger['lr'] = []
+        """
+        Print a summary of our training so far.
+        """
+        print(f"""
+            "-------------------- Iteration #{self.logger['i_so_far']} --------------------\n
+            Number of trainings run: {self.logger['i_so_far']}\n
+            Timesteps so far: {self.logger['t_so_far']}\n
+            Average length of batched episodes: {np.mean(self.logger['batch_lens'])}\n
+            Average reward of batched episodes: {np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])}\n
+            Average actor loss: {np.mean([losses.float().mean().cpu() for losses in self.logger['actor_losses']])}\n
+            Best batch reward: {self.logger['batch_best_rews']}\n
+            Number of episodes: {self.logger['n_episodes']}\n
+            KL divergence breaks: {self.logger['kl_divergence_breaks']}\n
+            Flags caught: {self.logger['flags']}\n
+            """)
 
     def log_epoch(self):
-        self.neptune_logger.log_epoch({
-            "train/iteration_numer": self.logger['i_so_far'],
-            "train/average_episodic_length": np.mean(self.logger['batch_lens']),
-            "train/average_episodic_return": np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']]),
-            "train/average_loss": np.mean([losses.float().mean().cpu() for losses in self.logger['actor_losses']]),
-            "train/timesteps_so_far": self.logger['t_so_far'],
-            "train/time_consumed": round((time.time_ns()-self.logger['delta_t']) / 1e9, 2),
-            "train/learning_rate": self.logger['lr'],
-            "traint/ent_coef": self.logger['ent_coef'],
+        self.neptune_logger.log_frames(self.logger["batch_best_frames"], self.logger["n_episodes"])
+        self.neptune_logger.log_lists({
+            "train/episode_rewards": self.logger["batch_rews"],
+            "train/episode_lengths": self.logger["batch_lens"],
+            "train/episode_best_rewards": self.logger["batch_best_rews"],
+            "train/actor_loss": self.logger["actor_losses"],
         })
+        self.neptune_logger.log_epoch({
+            "train/lr": self.logger["lr"],
+            "train/n_episodes": self.logger["n_episodes"],
+            "train/kl_divergence_breaks": self.logger["kl_divergence_breaks"],
+            "train/flags": self.logger["flags"],
+        })
+    
+    def reset_batch_log(self):
+        self.logger["batch_lens"] = []
+        self.logger["batch_rews"] = []
+        self.logger["batch_best_rews"] = 0
+        self.logger["batch_best_frames"] = []
+        self.logger["batch_actor_loss"] = []
+        self.logger["actor_losses"] = []
