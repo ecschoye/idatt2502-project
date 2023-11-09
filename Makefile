@@ -59,27 +59,52 @@ render-ppo: ## To render trained ppo
     $(PYTHON) main.py render-ppo
 
 .PHONY: format
-format: ## Format code and imports
-	make black
-	make isort
+format: black isort ## Format code and imports
 
 .PHONY: check
-check: ## Check formatting, imports, and linting
-	@black --check src
-	@isort --check-only src
-	@flake8 --max-line-length 88 src
+check: black isort flake8 ## Check formatting, imports, and linting
 
 .PHONY: black
 black: ## Format code only
-	@black src
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
+	black src && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	black src && \
+	deactivate
+endif
 
 .PHONY: isort
 isort: ## Format imports only
-	@isort src
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
+	isort src && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	isort src && \
+	deactivate
+endif
 
 .PHONY: flake8
 flake8: ## Check code style
-	@flake8 src
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
+	flake8 src && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	flake8 src && \
+	deactivate
+endif
 
 # List all available make commands
 help: ## Show help
