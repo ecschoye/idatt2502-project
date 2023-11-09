@@ -69,6 +69,7 @@ else
 	$(PYTHON) main.py ppo ${args} && \
 	deactivate
 endif
+
 .PHONY: render-ddqn
 render-ddqn: ## To render trained ddqn
 ifeq ($(OS),Windows_NT)
