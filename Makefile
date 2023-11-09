@@ -56,7 +56,7 @@ render-ddqn: # To render trained ddqn
 .PHONY: render-ppo
 render-ppo: # To render trained ppo
 	cd src && \
-    $(PYTHON) main.py render-ddqn
+    $(PYTHON) main.py render-ppo
 
 .PHONY: format
 format: ## Format code and imports
