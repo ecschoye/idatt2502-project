@@ -40,29 +40,87 @@ clean: ## Removes Virtual environment
 
 .PHONY: ddqn
 ddqn: ## To train ddqn
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
 	cd src && \
-    $(PYTHON) main.py ddqn ${args}
+	$(PYTHON) main.py ddqn ${args} && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	cd src && \
+	$(PYTHON) main.py ddqn ${args} && \
+	deactivate
+endif
 
 .PHONY: ppo
 ppo: ## To train ppo
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
 	cd src && \
-    $(PYTHON) main.py ppo ${args}
-
+	$(PYTHON) main.py ppo ${args} && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	cd src && \
+	$(PYTHON) main.py ppo ${args} && \
+	deactivate
+endif
 .PHONY: render-ddqn
 render-ddqn: ## To render trained ddqn
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
 	cd src && \
-    $(PYTHON) main.py render-ddqn
+	$(PYTHON) main.py render-ddqn && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	cd src && \
+	$(PYTHON) main.py render-ddqn && \
+	deactivate
+endif
 
 .PHONY: render-ppo
 render-ppo: ## To render trained ppo
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
 	cd src && \
-    $(PYTHON) main.py render-ppo
+	$(PYTHON) main.py render-ppo && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	cd src && \
+	$(PYTHON) main.py render-ppo && \
+	deactivate
+endif
 
 .PHONY: format
 format: black isort ## Format code and imports
 
 .PHONY: check
-check: black isort flake8 ## Check formatting, imports, and linting
+check: ## Check formatting, imports, and linting
+ifeq ($(OS),Windows_NT)
+	cd $(VENV_PATH) && \
+	activate && \
+	cd .. && cd .. && \
+	black --check src && \
+	isort --check-only src && \
+	flake8 --max-line-length 88 src && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	black --check src && \
+	isort --check-only src && \
+	flake8 --max-line-length 88 src && \
+	deactivate
+endif
 
 .PHONY: black
 black: ## Format code only
@@ -84,11 +142,11 @@ ifeq ($(OS),Windows_NT)
 	cd $(VENV_PATH) && \
 	activate && \
 	cd .. && cd .. && \
-	isort src && \
+	isort --check src && \
 	deactivate
 else
 	$(VENV_PATH) && \
-	isort src && \
+	isort --check-only src && \
 	deactivate
 endif
 
@@ -98,7 +156,7 @@ ifeq ($(OS),Windows_NT)
 	cd $(VENV_PATH) && \
 	activate && \
 	cd .. && cd .. && \
-	flake8 src && \
+	flake8 --max-line-length 88 src && \
 	deactivate
 else
 	$(VENV_PATH) && \
