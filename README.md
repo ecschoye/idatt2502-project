@@ -10,9 +10,9 @@
 - Explore different configurations of an algorithm
 - Try a hardcore environment: MineRL, Atari, Doom​
 
-We chose to try a hardcore envoirement, and the envoirement we ended up with was super mario bros.
+We chose to try a hardcore environment, and the environment we ended up with was super mario bros.
 
-Read more about the envoirement here: https://pypi.org/project/gym-super-mario-bros/
+Read more about the environment here: https://pypi.org/project/gym-super-mario-bros/
 
 ## Problems statement
 Compare the performence of DDQN and PPO in the Super Mario
@@ -30,7 +30,7 @@ Here are the requirements to run the project:
 The commands used for the project assumes that you have Make installed. If you don't have it, you will find the commands you need in the Makefile
 
 ### Setup
-This function creates a virtual envoirement for all the dependecies required for running the project and installs them.
+This function creates a virtual environment for all the dependecies required for running the project and installs them.
 
 ``` bash
 make setup
@@ -43,8 +43,8 @@ make setup PYTHON=python
 ```
 
 ### Run
-Make sure that you use the virtueal envoirement created in the setup section.
-#### To activate the envoirement in commandline:
+Make sure that you use the virtueal environment created in the setup section.
+#### To activate the environment in commandline manually:
 - Windows:
 ``` bash
 cd venv/scripts && activate && cd .. && cd ..
@@ -55,24 +55,24 @@ cd venv/bin && activate && cd .. && cd ..
 ```
 
 #### Train and render
-This function trains the ddqn.
+This function activates the environment and then trains the ddqn.
 
 ``` bash
 make ddqn
 ```
 
-This function trains the ppo.
+This function activates the environment and then trains the ppo.
 
 ``` bash
 make ppo
 ```
 
-This function renders a trained model of ddqn.
+This function activates the environment and then renders a trained model of ddqn.
 ``` bash
 make render-ddqn
 ```
 
-This function renders a trained model of ppo.
+This function activates the environment and then renders a trained model of ppo.
 ``` bash
 make render-ppo
 ```
@@ -82,12 +82,12 @@ You can specify flags for both the ppo and ddqn to log the training to Neptun.
 You can use these args on both ppo and ddqn. The args can also be combined. 
 To specify flags for logging use the commands under:
 
-Logs the traning to make graphs
+Logs the traning to make graphs on Neptun
 ```bash
 make ddqn args="--log"
 ```
 
-Logs the model to make graphs
+Logs the model to make graphs on Neptun
 ```bash
 make ddqn args="--log-model"
 ```
@@ -98,13 +98,13 @@ Pyhton3 is set to standard and if your computer uses python instead of python3 y
 make ddqn PYTHON=python
 ```
 
-#### Deactivate the envoirement with:
+#### Deactivate the environment with:
 ``` bash
 deactivate
 ```
 
 ### Cleanup
-This commands removes the virtual envoirment created in the setup section. You can also remove this manually.
+This commands removes the virtual environment created in the setup section. You can also remove this manually.
 
 ```bash
 make clean
