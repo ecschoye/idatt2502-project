@@ -37,6 +37,8 @@ endif
 .PHONY: clean
 clean: ## Removes Virtual environment
 	$(RMDIR) $(VENV_NAME)
+	cd src && \
+	$(RMDIR) __pycache__
 
 .PHONY: ddqn
 ddqn: ## To train ddqn
