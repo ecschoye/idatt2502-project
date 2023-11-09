@@ -20,7 +20,7 @@ else
 endif
 
 .PHONY: setup
-setup: # Makes virtual envoirement and installs requirements
+setup: ## Makes virtual environment and installs requirements
 	$(PYTHON) -m venv $(VENV_NAME)
 ifeq ($(OS),Windows_NT)
 	cd $(VENV_PATH) && \
@@ -35,26 +35,26 @@ else
 endif
 
 .PHONY: clean
-clean: # Removes Virtual envoirement
+clean: ## Removes Virtual environment
 	$(RMDIR) $(VENV_NAME)
 
 .PHONY: ddqn
-ddqn: # To train ddqn
+ddqn: ## To train ddqn
 	cd src && \
     $(PYTHON) main.py ddqn ${args}
 
 .PHONY: ppo
-ppo: # To train ppo
+ppo: ## To train ppo
 	cd src && \
     $(PYTHON) main.py ppo ${args}
 
 .PHONY: render-ddqn
-render-ddqn: # To render trained ddqn
+render-ddqn: ## To render trained ddqn
 	cd src && \
     $(PYTHON) main.py render-ddqn
 
 .PHONY: render-ppo
-render-ppo: # To render trained ppo
+render-ppo: ## To render trained ppo
 	cd src && \
     $(PYTHON) main.py render-ppo
 
@@ -80,3 +80,7 @@ isort: ## Format imports only
 .PHONY: flake8
 flake8: ## Check code style
 	@flake8 src
+
+# List all available make commands
+help: ## Show help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
