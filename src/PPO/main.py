@@ -67,8 +67,8 @@ def train(env, actor_model, critic_model, parameters, notes):
     model = PPO(env, parameters)
     if actor_model != "" and critic_model != "":
         print(STRINGS["loading_agents"], flush=True)
-        model.actor.load_state_dict(torch.load(actor_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
-        model.critic.load_state_dict(torch.load(critic_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        #model.actor.load_state_dict(torch.load(actor_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
+        #model.critic.load_state_dict(torch.load(critic_model, map_location=("cuda" if torch.cuda.is_available() else "cpu")))
         print(STRINGS["loading_success"], flush=True)
     else:
         print(STRINGS["from_scratch"], flush=True)
