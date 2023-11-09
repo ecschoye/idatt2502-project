@@ -1,15 +1,19 @@
 import time
+
 import numpy as np
 import torch
 from tqdm import tqdm
+
 from agent.ddqn_agent import DDQNAgent
 from environment import create_mario_env
 from neptune_wrapper import NeptuneModels, NeptuneRun
 
+num_episodes = 10
+env_name = "SuperMarioBros-v0"
 
 def train_mario(pretrained=False, log=False):
     print("Creating environment")
-    env = create_mario_env("SuperMarioBros-v0")
+    env = create_mario_env(env_name)
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
@@ -18,7 +22,6 @@ def train_mario(pretrained=False, log=False):
     if pretrained:
         agent.load()
 
-    num_episodes = 5000
     print("Training for {} episodes".format(num_episodes))
     total_rewards = []
     max_episode_reward = 0
@@ -132,7 +135,7 @@ def setup_neptune_logger(agent, num_episodes):
 
 
 def render_mario():
-    env = create_mario_env("SuperMarioBros-6-4-v0")
+    env = create_mario_env(env_name)
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
@@ -171,7 +174,6 @@ def log_model_version():
     action_space = env.action_space.n
     agent = DDQNAgent(env, state_space, action_space)
     agent.load()
-    num_episodes = 1000
     logger = NeptuneModels()
     logger.model_version(
         "MARIO-DDQN",

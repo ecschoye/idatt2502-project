@@ -1,6 +1,7 @@
 import os
-import torch
+
 import numpy as np
+import torch
 import torch.nn as nn
 
 
@@ -32,16 +33,12 @@ class DQN(nn.Module):
         return self.fc(conv_out)
 
     def save(self, target: bool = False):
-        dir_path = (
-            "trained_model/target" if target else "trained_model/current"
-        )
+        dir_path = "trained_model/target" if target else "trained_model/current"
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         torch.save(self.state_dict(), dir_path + "_ddqn_model.pt")
 
     def load(self, device, target: bool = False):
-        dir_path = (
-            "trained_model/target" if target else "trained_model/current"
-        )
+        dir_path = "trained_model/target" if target else "trained_model/current"
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         self.load_state_dict(
             torch.load(dir_path + "_ddqn_model.pt", map_location=device)

@@ -45,16 +45,24 @@ class ExperienceReplayBuffer:
         state_sample = self.state_buffer[indices].clone().detach().float().to(device)
         action_sample = self.action_buffer[indices].clone().detach().long().to(device)
         reward_sample = self.reward_buffer[indices].clone().detach().float().to(device)
-        next_state_sample = self.next_state_buffer[indices].clone().detach().float().to(device)
+        next_state_sample = (
+            self.next_state_buffer[indices].clone().detach().float().to(device)
+        )
         done_sample = self.done_buffer[indices].clone().detach().float().to(device)
 
-        return state_sample, action_sample, reward_sample, next_state_sample, done_sample
+        return (
+            state_sample,
+            action_sample,
+            reward_sample,
+            next_state_sample,
+            done_sample,
+        )
 
     def save(self):
         """
         Save the current replay buffer.
         """
-        dir_path = "trained_model/experience_replay_buffer_data"
+        dir_path = "experience_replay_buffer_data/"
         os.makedirs(dir_path, exist_ok=True)
         torch.save(self.state_buffer, os.path.join(dir_path, "states.pt"))
         torch.save(self.action_buffer, os.path.join(dir_path, "actions.pt"))
@@ -75,7 +83,7 @@ class ExperienceReplayBuffer:
         """
         Load the state of the buffer from disk.
         """
-        dir_path = "trained_model/experience_replay_buffer_data"
+        dir_path = "experience_replay_buffer_data/"
         os.makedirs(dir_path, exist_ok=True)
         self.state_buffer = torch.load(os.path.join(dir_path, "states.pt"))
         self.action_buffer = torch.load(os.path.join(dir_path, "actions.pt"))
