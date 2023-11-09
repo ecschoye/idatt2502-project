@@ -1,29 +1,36 @@
 VENV_NAME = venv
 REQUIREMENTS_FILE = requirements.txt
 PYTHON ?= python3
+DARWIN = Darwin
 ifeq ($(OS),Windows_NT)
     VENV_PATH = $(VENV_NAME)\Scripts
     RMDIR = rmdir /s /q
     PIP = pip
 else
-    VENV_PATH = source $(VENV_NAME)/bin
+    UNAME_S := $(shell uname -s)
+    VENV_PATH = source $(VENV_NAME)/bin/activate
     RMDIR = rm -rf
-	PIP = pip3
+    PIP = pip3
+endif
+
+ifeq ($(UNAME_S),$(DARWIN))
+    TORCH_INSTALL_CMD := $(PIP) install torch torchvision torchaudio
+else
+    TORCH_INSTALL_CMD := $(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 endif
 
 .PHONY: setup
 setup: # Makes virtual envoirement and installs requirements
-	$(PYTHON) -m venv $(VENV_NAME) && \
+	$(PYTHON) -m venv $(VENV_NAME)
+ifeq ($(OS),Windows_NT)
 	cd $(VENV_PATH) && \
 	activate && \
 	$(PIP) install -r $(REQUIREMENTS_FILE)
-ifeq ($(OS),Windows_NT)
-	$(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-endif
-ifneq ($(OS),Windows_NT)
-ifneq ($(findstring Darwin,$(shell uname)),Darwin)
-	$(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-endif
+	$(TORCH_INSTALL_CMD)
+else
+	$(VENV_PATH) && \
+	$(PIP) install -r $(REQUIREMENTS_FILE) && \
+	$(TORCH_INSTALL_CMD)
 endif
 
 .PHONY: clean
@@ -52,10 +59,14 @@ render-ppo: # To render trained ppo
 
 .PHONY: imports
 imports: # To fix import issue
+ifeq ($(OS),Windows_NT)
 	cd $(VENV_PATH) && \
 	activate && \
-	cd .. && cd .. && \
     $(PIP) install -e .
+else
+	$(VENV_PATH) && \
+    $(PIP) install -e .
+endif
 
 .PHONY: format
 format: ## Format code and imports

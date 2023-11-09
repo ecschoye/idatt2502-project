@@ -1,6 +1,6 @@
 import argparse
 
-from src.training.ddqn_training import (
+from training.ddqn_training import (
     train_mario,
     render_mario,
     log_model_version

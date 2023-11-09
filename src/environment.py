@@ -7,7 +7,7 @@ from gym.utils.play import play
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
 
-from src.neptune_wrapper import NeptuneRun
+from neptune_wrapper import NeptuneRun
 
 
 class FrameSkipWrapper(gym.Wrapper):

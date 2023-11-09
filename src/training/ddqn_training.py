@@ -2,10 +2,10 @@ import time
 import numpy as np
 import torch
 from tqdm import tqdm
-from src.agent.ddqn_agent import DDQNAgent
-from src.environment import create_mario_env
-from src.utils.experience_replay_buffer import ExperienceReplayBuffer
-from src.neptune_wrapper import NeptuneModels, NeptuneRun
+from agent.ddqn_agent import DDQNAgent
+from environment import create_mario_env
+from utils.experience_replay_buffer import ExperienceReplayBuffer
+from neptune_wrapper import NeptuneModels, NeptuneRun
 
 
 def train_mario(pretrained=False, log=False):
