@@ -16,7 +16,6 @@ setup: # Makes virtual envoirement and installs requirements
 	$(PYTHON) -m venv $(VENV_NAME) && \
 	cd $(VENV_PATH) && \
 	activate && \
-	cd .. && cd .. && \
 	$(PIP) install -r $(REQUIREMENTS_FILE)
 ifeq ($(OS),Windows_NT)
 	$(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
