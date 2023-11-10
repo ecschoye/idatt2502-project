@@ -167,11 +167,11 @@ endif
 isort: ## Format imports only
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
-	isort --check src && \
+	isort src && \
 	deactivate
 else
 	$(VENV_PATH) && \
-	isort --check-only src && \
+	isort src && \
 	deactivate
 endif
 
@@ -183,7 +183,7 @@ ifeq ($(OS),Windows_NT)
 	deactivate
 else
 	$(VENV_PATH) && \
-	flake8 src && \
+	flake8 --max-line-length 88 src && \
 	deactivate
 endif
 
