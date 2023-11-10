@@ -1,6 +1,7 @@
 import argparse
 
 from training.ddqn_training import DDQNTrainer, DDQNLogger, DDQNRenderer
+from PPO.ppo_trainer import PPOTrainer
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Machine Learning Project Options")
@@ -35,22 +36,16 @@ if __name__ == "__main__":
             DDQNLogger().log()
     elif args.option == "ppo":
         print("PPO")
-        # train_ppo(log=args.log) ADD PPO TRANING
-        if args.log_model:
-            print("Log model")
-            # log_model_version() ADD PPO LOGING MODEL
+        PPOTrainer().train(log=args.log)
     elif args.option == "render-ddqn":
         print("Rendering ddqn")
         DDQNRenderer().render()
     elif args.option == "render-ppo":
         print("Rendering ppo")
-        # render_ppo() ADD PPO RENDER METHOD
+        PPOTrainer().test()
     elif args.option == "log-ddqn":
         print("Logging DDQN Model")
         DDQNLogger().log()
-    elif args.option == "log-ppo":
-        print("Logging PPO Model")
-        # log_model_version()
     else:
         print(
             "Invalid option. Please select an option "
