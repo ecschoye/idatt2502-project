@@ -105,7 +105,7 @@ else
 endif
 
 .PHONY: render-ppo
-log-ppo: ## To render trained ppo
+render-ppo: ## To render trained ppo
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
 	cd src && \

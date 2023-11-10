@@ -18,13 +18,16 @@ class DDQNTrainer:
         self.num_episodes = NUM_EPISODES
         self.env = create_mario_env(ENV_NAME)
         self.agent = DDQNAgent(self.env, self.env.observation_space.shape, self.env.action_space.n)
+        self.flag_count = 0
 
     def train(self, log=False):
         print("Training for {} episodes".format(self.num_episodes))
         total_rewards = []
         max_episode_reward = 0
         interval_reward = 0
-        logged_flags = 0
+        lowest_frame_count = float('inf')
+        logger = None
+        frames = []
 
         # init logger with proper params
         if log:
@@ -36,7 +39,6 @@ class DDQNTrainer:
             state = torch.tensor(np.array([state]))
             total_reward = 0
             steps = 0
-            frames = []
             while True:
                 if episode % 10 == 0:
                     self.env.render()
@@ -59,10 +61,14 @@ class DDQNTrainer:
                     frames.append(self.env.frame)
                 if done:
                     if info["flag_get"]:
-                        logged_flags += 1
+                        self.flag_count += 1
 
-                        if log and episode >= self.num_episodes * 0.6:
-                            logger.log_frames(frames, episode)
+                        if len(frames) < lowest_frame_count:
+                            lowest_frame_count = len(frames)
+                            print(f"New lowest frame count: {lowest_frame_count}")
+
+                            if episode >= self.num_episodes * 0.65:
+                                logger.log_frames(frames, episode)
 
                     if total_reward > max_episode_reward:
                         max_episode_reward = total_reward
@@ -70,19 +76,22 @@ class DDQNTrainer:
 
             total_rewards.append(reward)
             if episode % 10 == 0:
+                flag_percentage = (self.flag_count / (episode + 1)) * 100
                 tqdm.write(
                     "Episode: {}, "
                     "Reward: {}, "
                     "Max Reward: {}, "
                     "Epsilon: {}, "
                     "Steps: {}, "
-                    "Flags: {}".format(
+                    "Flags: {}, "
+                    "Flag Percentage:{},".format(
                         episode,
                         total_reward,
                         max_episode_reward,
                         self.agent.epsilon,
                         steps,
-                        logged_flags,
+                        self.flag_count,
+                        flag_percentage,
                     )
                 )
                 if log and NUM_EPISODES >= NUM_EPISODES * 0.02:
@@ -99,12 +108,11 @@ class DDQNTrainer:
                         "train/epsilon": self.agent.epsilon,
                         "train/steps": steps,
                         "train/reward_per_step": total_reward / steps,
-                        "train/flags": logged_flags,
+                        "train/flags": self.flag_count,
                     }
                 )
             self.agent.update_epsilon()
         if log:
-            logger.log_frames(frames, episode)
             logger.finish()
         self.agent.save()
         self.env.close()

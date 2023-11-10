@@ -1,7 +1,9 @@
+import os
+
+import cv2
 import neptune
 from dotenv import load_dotenv
-import os
-import cv2
+
 load_dotenv()
 
 NEPTUNE_API_KEY = os.getenv("NEPTUNE_API_TOKEN")
@@ -57,9 +59,7 @@ class NeptuneModels:
         if folders_to_track is not None:
             for i in range(len(folders_to_track)):
                 print(folders_to_track[i])
-                model_version["model/dataset"].upload_files(
-                    folders_to_track[i]
-                )
+                model_version["model/dataset"].upload_files(folders_to_track[i])
         model_version.wait()
         model_version.stop()
 
