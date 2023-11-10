@@ -1,6 +1,5 @@
 import gc
 import time
-import gym
 import numpy as np
 import torch
 from torch import nn
@@ -141,7 +140,7 @@ class PPO:
 
             for _ in range(self.n_updates_per_iteration):
                 # Introducing dynamic learining rate that decreases as the training advances
-                frac = (t_so_far - 1.0) / (4 * total_timesteps)
+                frac = (t_so_far - 1.0) / total_timesteps
                 new_lr = self.lr * (1.0 - frac)
                 new_lr = max(new_lr, 0.000001)
 
@@ -212,7 +211,6 @@ class PPO:
             
         self.neptune_logger.finish()
 
-
     def rollout(self):
         gc.collect()
         """
@@ -266,7 +264,8 @@ class PPO:
                 val = self.critic(obs1.unsqueeze(0))
                 obs, rew, done, info = self.env.step(action)
                 
-                if info['flag_get']:
+                if info["flag_get"]:
+                    print("JAAAAAAAAAAAA")
                     batch_flags += 1
 
                 if self.capture_frames:
@@ -303,6 +302,7 @@ class PPO:
         self.logger["batch_lens"] = batch_lens
         self.logger["batch_best_rews"] = batch_best_rews
         self.logger["batch_best_frames"] = batch_best_frames
+        self.logger["flags"] = batch_flags
 
         # Return batch data
         return batch_obs, batch_acts, batch_log_probs, batch_rews, batch_lens, batch_vals, batch_dones
@@ -351,7 +351,7 @@ class PPO:
         Print a summary of our training so far.
         """
         print(f"""
-            "-------------------- Iteration #{self.logger['i_so_far']} --------------------\n
+            -------------------- Iteration #{self.logger['i_so_far']} --------------------\n
             Number of trainings run: {self.logger['i_so_far']}\n
             Timesteps so far: {self.logger['t_so_far']}\n
             Average length of batched episodes: {np.mean(self.logger['batch_lens'])}\n
