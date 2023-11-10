@@ -12,7 +12,7 @@ class PPOHyperparameters:
             "lr": 0.005,  # Learning rate
             "num_minibatches": 4,  # K in the paper
             "lam": 0.99,  # Lambda for GAE-Lambda
-            "ent_coef": 0.03,  
+            "ent_coef": 0.03,
             # Entropy coefficient, higher penalizes overdeterministic policies
             "max_grad_norm": 0.2,  # Gradient clipping threshold
             "target_kl": 0.05,  # Target KL-divergence

@@ -146,7 +146,7 @@ class PPO:
             loss = []
 
             for _ in range(self.n_updates_per_iteration):
-                # Introducing dynamic learining rate 
+                # Introducing dynamic learining rate
                 # that decreases as the training advances
                 frac = (t_so_far - 1.0) / total_timesteps
                 new_lr = self.lr * (1.0 - frac)
@@ -190,7 +190,7 @@ class PPO:
                     entropy_loss = entropy.mean()
                     actor_loss = actor_loss - self.ent_coef * entropy_loss
 
-                    # Calculate gradients and 
+                    # Calculate gradients and
                     # perform backward propagation for actor network
                     self.actor_optim.zero_grad()
                     actor_loss.backward(retain_graph=True)
