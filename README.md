@@ -127,11 +127,11 @@ Here are some example runs:
 ### DDQN
 Example runs with DDQN:
 
-![DDQN Run](gifs/ddqn_super_mario_1.gif)
+<img src="gifs/ddqn_super_mario_1.gif" alt="DDQN Run" width="400"/>
 
-![DDQN Run](gifs/ddqn_super_mario_2.gif)
+<img src="gifs/ddqn_super_mario_2.gif" alt="DDQN Run" width="400"/>
 
 ### PPO
 An example run with PPO:
 
-![DDQN Run](gifs/ppo_super_mario_1.gif)
+<img src="gifs/ppo_super_mario_1.gif" alt="PPO Run" width="400"/>
