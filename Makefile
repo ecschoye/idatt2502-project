@@ -22,10 +22,8 @@ endif
 
 .PHONY: setup
 setup: ## Makes virtual environment and installs requirements
-	$(PYTHON) -m venv $(VENV_NAME) && \
-    @echo "Creating virtual environment..."
+	$(PYTHON) -m venv $(VENV_NAME)
 ifeq ($(OS),Windows_NT)
-	@echo "Setting up in Windows environment..."
 	$(ACTIVATE_VENV) && \
 	$(PIP) install -r $(REQUIREMENTS_FILE) && \
 	$(TORCH_INSTALL_CMD)
@@ -163,4 +161,12 @@ endif
 
 .PHONY: help
 help: ## List all available make commands
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+ifeq ($(OS),Windows_NT)
+	$(ACTIVATE_VENV) && \
+	$(PYTHON) list_make_commands.py && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	$(PYTHON) list_make_commands.py && \
+	deactivate
+endif
