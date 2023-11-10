@@ -1,7 +1,7 @@
 VENV_NAME = venv
 REQUIREMENTS_FILE = requirements.txt
 PYTHON ?= python3
-DARWIN = Darwin
+MAC = Darwin
 ifeq ($(OS),Windows_NT)
     VENV_PATH = .\$(VENV_NAME)\Scripts
     ACTIVATE_VENV = $(VENV_PATH)\activate
@@ -14,7 +14,7 @@ else
     PIP = pip3
 endif
 
-ifeq ($(UNAME_S),$(DARWIN))
+ifeq ($(UNAME_S),$(MAC))
     TORCH_INSTALL_CMD := $(PIP) install torch torchvision torchaudio
 else
     TORCH_INSTALL_CMD := $(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
@@ -35,7 +35,7 @@ else
 	$(TORCH_INSTALL_CMD)
 endif
 
-
+.PHONY: clean
 clean: ## Removes Virtual environment
 ifeq ($(OS),Windows_NT)
 	@if exist "$(VENV_NAME)" ($(RMDIR) $(VENV_NAME))
@@ -161,6 +161,6 @@ else
 	deactivate
 endif
 
-# List all available make commands
-help: ## Show help
+.PHONY: help
+help: ## List all available make commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
