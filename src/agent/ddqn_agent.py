@@ -28,7 +28,6 @@ class DDQNAgent:
         epsilon_min=DDQNParameters.EPSILON_MIN.value,
         epsilon_decay_rate=DDQNParameters.EPSILON_DECAY_RATE.value,
         target_update_frequency=DDQNParameters.TARGET_UPDATE_FREQUENCY.value,
-        pretrained_path=DDQNParameters.PRETRAINED_PATH.value,
     ):
         # Environment
         self.env = env
@@ -56,12 +55,6 @@ class DDQNAgent:
         self.local_model = DQN(self.state_space, self.action_space).to(self.device)
         self.target_model = DQN(self.state_space, self.action_space).to(self.device)
         self.steps = 0
-
-        # Load pretrained model
-        self.pretrained_path = pretrained_path
-        if self.pretrained_path is not None:
-            self.local_model.load(self.device)
-            self.target_model.load(self.device, True)
 
         # Optimizer and loss
         self.optimizer = torch.optim.Adam(
