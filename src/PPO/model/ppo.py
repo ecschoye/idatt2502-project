@@ -266,6 +266,9 @@ class PPO:
                 val = self.critic(obs1.unsqueeze(0))
                 obs, rew, done, info = self.env.step(action)
                 
+                if info['flag_get']:
+                    batch_flags += 1
+
                 if self.capture_frames:
                     ep_frames.append(self.env.frame)
                 ep_rews.append(rew)
@@ -274,8 +277,6 @@ class PPO:
                 batch_log_probs.append(log_prob)
 
                 if done:
-                    if info['flag_get']:
-                        batch_flags += 1
                     break
 
             # Collect episodic length and rewards
@@ -299,7 +300,7 @@ class PPO:
         ) # TODO maybe use flatten()
 
         # Log the episodic returns and episodic lengths in this batch.
-        self.logger["batch_lens"].append(batch_lens)
+        self.logger["batch_lens"] = batch_lens
         self.logger["batch_best_rews"] = batch_best_rews
         self.logger["batch_best_frames"] = batch_best_frames
 
@@ -355,7 +356,7 @@ class PPO:
             Timesteps so far: {self.logger['t_so_far']}\n
             Average length of batched episodes: {np.mean(self.logger['batch_lens'])}\n
             Average reward of batched episodes: {np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])}\n
-            Average actor loss: {np.mean([losses.float().mean().cpu() for losses in self.logger['batch_actor_loss']])}\n
+            Average actor loss: {np.mean([losses.float().mean().cpu() if isinstance(losses, torch.Tensor) else losses for losses in self.logger['batch_actor_loss']])}\n
             Best batch reward: {self.logger['batch_best_rews']}\n
             Number of episodes: {self.logger['n_episodes']}\n
             KL divergence breaks: {self.logger['kl_divergence_breaks']}\n
@@ -363,10 +364,10 @@ class PPO:
             """)
 
     def log_epoch(self):
-        self.neptune_logger.log_frames(self.logger["batch_best_frames"], self.logger["n_episodes"])
+        self.logger["batch_actor_loss"] = [tensor.item() for tensor in self.logger["batch_actor_loss"]]
         self.neptune_logger.log_lists({
             "train/episode_rewards": self.logger["batch_rews"],
-            "train/episode_lengths": self.logger["batch_lens"] ,
+            "train/episode_lengths": self.logger["batch_lens"],
             "train/actor_loss": self.logger["batch_actor_loss"],
         })
         self.neptune_logger.log_epoch({
@@ -376,6 +377,7 @@ class PPO:
             "train/kl_divergence_breaks": self.logger["kl_divergence_breaks"],
             "train/flags": self.logger["flags"],
         })
+        self.neptune_logger.log_frames(self.logger["batch_best_frames"], self.logger["n_episodes"])
     
     def reset_batch_log(self):
         self.logger["batch_lens"] = []

@@ -139,14 +139,7 @@ class NeptuneRun:
         """
         if metadata_dict is not None:
             for key in metadata_dict:
-                self.run[key].extend(
-                    [
-                        metadata_dict[key]
-                        for metadata_dict[key] in range(
-                            len(metadata_dict[key])
-                        )
-                    ]
-                )
+                self.run[key].extend(metadata_dict[key])
 
     def log_frames(self, frames, episode_number):
         """
@@ -165,7 +158,7 @@ class NeptuneRun:
         size = (y, x)
         vid = cv2.VideoWriter(
             "animation_{}.mp4".format(episode_number),
-            cv2.VideoWriter_fourcc(*"avc1"),
+            cv2.VideoWriter_fourcc(*"XVID"),
             30,
             size,
             True,
