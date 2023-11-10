@@ -234,8 +234,8 @@ class PPO:
 
             if i_so_far % self.save_freq == 0:
                 print("Saving")
-                torch.save(self.actor.state_dict(), "./src/PPO/network/ppo_actor.pth")
-                torch.save(self.critic.state_dict(), "./src/PPO/network/ppo_critic.pth")
+                torch.save(self.actor.state_dict(), "PPO/network/ppo_actor.pth")
+                torch.save(self.critic.state_dict(), "PPO/network/ppo_critic.pth")
 
         self.neptune_logger.finish()
 
