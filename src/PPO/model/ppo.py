@@ -317,7 +317,7 @@ class PPO:
             self.logger["batch_rews"].append(sum_rewards)
 
         # Reshape data as tensors in the shape specified before returning
-        #batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
+        # batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
         batch_obs_np = np.array(batch_obs)
         batch_obs = torch.tensor(batch_obs_np, dtype=torch.float32).to(self.device)
         batch_acts = torch.tensor(batch_acts, dtype=torch.long).to(self.device)
