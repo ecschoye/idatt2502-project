@@ -49,7 +49,7 @@ endif
 
 
 .PHONY: ddqn
-ddqn: ## To train ddqn
+ddqn: ## To train ddqn. Use args "--log" to log graphs of training, and "--log-model" to push the model to Neptune. They can be used together.
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
 	cd src && \
@@ -90,6 +90,20 @@ else
 	deactivate
 endif
 
+.PHONY: log-ddqn
+render-ddqn: ## To log trained ddqn model
+ifeq ($(OS),Windows_NT)
+	$(ACTIVATE_VENV) && \
+	cd src && \
+	$(PYTHON) main.py log-ddqn && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	cd src && \
+	$(PYTHON) main.py log-ddqn && \
+	deactivate
+endif
+
 .PHONY: render-ppo
 render-ppo: ## To render trained ppo
 ifeq ($(OS),Windows_NT)
@@ -101,6 +115,20 @@ else
 	$(VENV_PATH) && \
 	cd src && \
 	$(PYTHON) main.py render-ppo && \
+	deactivate
+endif
+
+.PHONY: log-ppo
+render-ddqn: ## To log trained ppo model
+ifeq ($(OS),Windows_NT)
+	$(ACTIVATE_VENV) && \
+	cd src && \
+	$(PYTHON) main.py log-ppo && \
+	deactivate
+else
+	$(VENV_PATH) && \
+	cd src && \
+	$(PYTHON) main.py log-ppo && \
 	deactivate
 endif
 
