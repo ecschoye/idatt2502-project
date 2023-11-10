@@ -18,7 +18,6 @@ class PPOTrainer:
         self.env.metadata['render-modes']="human"
         self.parameters = PPOHyperparameters()
 
-
     def train(self, log=False, load_models=False):
         """
         Main Function to run training or testing

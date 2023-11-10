@@ -98,7 +98,7 @@ class PPO:
         """
         if hyperparameters is not None:
             for param, val in hyperparameters.items():
-                exec ("self." + param + " = " + str(val))
+                setattr(self, param, val)
 
     def learn(self, total_timesteps):
         """
