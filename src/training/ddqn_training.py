@@ -19,7 +19,7 @@ class DDQNTrainer:
         self.env = create_mario_env(ENV_NAME)
         self.agent = DDQNAgent(
             self.env,
-            self.env.observation_space.shape, 
+            self.env.observation_space.shape,
             self.env.action_space.n
             )
 
@@ -56,10 +56,10 @@ class DDQNTrainer:
                 action = torch.tensor([action], dtype=torch.long).unsqueeze(0)
 
                 self.agent.add_experience_to_memory(
-                    state, 
-                    action, 
-                    reward, 
-                    next_state, 
+                    state,
+                    action,
+                    reward,
+                    next_state,
                     done
                     )
                 self.agent.learn_from_memory_batch()
@@ -143,8 +143,8 @@ class DDQNRenderer:
     def __init__(self):
         self.env = create_mario_env(ENV_NAME)
         self.agent = DDQNAgent(
-            self.env, 
-            self.env.observation_space.shape, 
+            self.env,
+            self.env.observation_space.shape,
             self.env.action_space.n
             )
 
@@ -174,8 +174,8 @@ class DDQNLogger:
     def __init__(self):
         self.env = create_mario_env(ENV_NAME)
         self.agent = DDQNAgent(
-            self.env, 
-            self.env.observation_space.shape, 
+            self.env,
+            self.env.observation_space.shape,
             self.env.action_space.n
             )
 
