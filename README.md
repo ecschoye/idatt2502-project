@@ -10,7 +10,7 @@
 - Explore different configurations of an algorithm
 - Try a hardcore environment: MineRL, Atari, Doom​
 
-We chose to try a hardcore environment, and the environment we ended up with was super mario bros.
+We choose to try a hardcore environment, and the environment we ended up with was super mario bros.
 
 Read more about the environment here: https://pypi.org/project/gym-super-mario-bros/
 
