@@ -40,13 +40,17 @@ class DQN(nn.Module):
 
     def save(self, target: bool = False):
         """Save the model"""
-        dir_path = "DDQN/trained_model/target" if target else "DDQN/trained_model/current"
+        dir_path = (
+            "DDQN/trained_model/target" if target else "DDQN/trained_model/current"
+        )
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         torch.save(self.state_dict(), dir_path + "_ddqn_model.pt")
 
     def load(self, device, target: bool = False):
         """Load the model"""
-        dir_path = "DDQN/trained_model/target" if target else "DDQN/trained_model/current"
+        dir_path = (
+            "DDQN/trained_model/target" if target else "DDQN/trained_model/current"
+        )
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         self.load_state_dict(
             torch.load(dir_path + "_ddqn_model.pt", map_location=device)

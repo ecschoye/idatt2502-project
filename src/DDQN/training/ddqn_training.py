@@ -5,9 +5,9 @@ import torch
 from tqdm import tqdm
 
 from DDQN.agent.ddqn_agent import DDQNAgent
+from DDQN.utils.config import DDQNTrainingParameters
 from environment import create_mario_env
 from neptune_wrapper import NeptuneModels, NeptuneRun
-from DDQN.utils.config import DDQNTrainingParameters
 
 NUM_EPISODES = DDQNTrainingParameters.NUM_EPISODES.value
 ENV_NAME = DDQNTrainingParameters.ENV_NAME.value
@@ -17,10 +17,13 @@ class DDQNTrainer:
     """
     Class for training a DDQN agent
     """
+
     def __init__(self):
         self.num_episodes = NUM_EPISODES
         self.env = create_mario_env(ENV_NAME)
-        self.agent = DDQNAgent(self.env, self.env.observation_space.shape, self.env.action_space.n)
+        self.agent = DDQNAgent(
+            self.env, self.env.observation_space.shape, self.env.action_space.n
+        )
         self.flag_count = 0
 
     def train(self, log=False):
@@ -32,7 +35,7 @@ class DDQNTrainer:
         total_rewards = []
         max_episode_reward = 0
         interval_reward = 0
-        lowest_frame_count = float('inf')
+        lowest_frame_count = float("inf")
         logger = None
         frames = []
 
@@ -58,7 +61,9 @@ class DDQNTrainer:
                 done = torch.tensor([done], dtype=torch.bool).unsqueeze(0)
                 action = torch.tensor([action], dtype=torch.long).unsqueeze(0)
 
-                self.agent.add_experience_to_memory(state, action, reward, next_state, done)
+                self.agent.add_experience_to_memory(
+                    state, action, reward, next_state, done
+                )
                 self.agent.learn_from_memory_batch()
 
                 state = next_state
@@ -146,9 +151,12 @@ class DDQNRenderer:
     """
     Class for rendering a trained DDQN agent
     """
+
     def __init__(self):
         self.env = create_mario_env(ENV_NAME)
-        self.agent = DDQNAgent(self.env, self.env.observation_space.shape, self.env.action_space.n)
+        self.agent = DDQNAgent(
+            self.env, self.env.observation_space.shape, self.env.action_space.n
+        )
 
     def render(self):
         """
@@ -179,9 +187,12 @@ class DDQNLogger:
     """
     Logs DDQN model to Neptune.ai
     """
+
     def __init__(self):
         self.env = create_mario_env(ENV_NAME)
-        self.agent = DDQNAgent(self.env, self.env.observation_space.shape, self.env.action_space.n)
+        self.agent = DDQNAgent(
+            self.env, self.env.observation_space.shape, self.env.action_space.n
+        )
 
     def log(self):
         """
