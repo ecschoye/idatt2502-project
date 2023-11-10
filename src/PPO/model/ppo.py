@@ -234,8 +234,8 @@ class PPO:
 
             if i_so_far % self.save_freq == 0:
                 print("Saving")
-                torch.save(self.actor.state_dict(), "./src/PPO/network/ppo_actor.pth")
-                torch.save(self.critic.state_dict(), "./src/PPO/network/ppo_critic.pth")
+                torch.save(self.actor.state_dict(), "PPO/network/ppo_actor.pth")
+                torch.save(self.critic.state_dict(), "PPO/network/ppo_critic.pth")
 
         self.neptune_logger.finish()
 
@@ -317,7 +317,9 @@ class PPO:
             self.logger["batch_rews"].append(sum_rewards)
 
         # Reshape data as tensors in the shape specified before returning
-        batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
+        #batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
+        batch_obs_np = np.array(batch_obs)
+        batch_obs = torch.tensor(batch_obs_np, dtype=torch.float32).to(self.device)
         batch_acts = torch.tensor(batch_acts, dtype=torch.long).to(self.device)
         batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float32).to(
             self.device
