@@ -36,7 +36,6 @@ def train_mario(pretrained=False, log=False):
     for episode in tqdm(range(num_episodes)):
         state = env.reset()
         state = torch.tensor(np.array([state]))
-        # print("State shape in train_mario:", state.shape)
         total_reward = 0
         steps = 0
         frames = []

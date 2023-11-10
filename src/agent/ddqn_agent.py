@@ -10,6 +10,10 @@ from utils.experience_replay_buffer import ExperienceReplayBuffer
 
 
 class DDQNAgent:
+    '''
+    Double Deep Q Network Agent class that defines the agent's behavior.
+    '''
+
     def __init__(
         self,
         env,

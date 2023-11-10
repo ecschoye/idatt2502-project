@@ -6,6 +6,10 @@ import torch.nn as nn
 
 
 class DQN(nn.Module):
+    """
+    Deep Q Network class that defines the neural network architecture.
+    """
+
     def __init__(self, input_shape, n_actions):
         super(DQN, self).__init__()
 
@@ -25,19 +29,23 @@ class DQN(nn.Module):
         )
 
     def _get_conv_out(self, shape):
+        '''Convulation output size calculation'''
         o = self.conv(torch.zeros(1, *shape))
         return int(np.prod(o.size()))
 
     def forward(self, x):
+        '''Forward pass of the neural network'''
         conv_out = self.conv(x).view(x.size()[0], -1)
         return self.fc(conv_out)
 
     def save(self, target: bool = False):
+        '''Save the model'''
         dir_path = "trained_model/target" if target else "trained_model/current"
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         torch.save(self.state_dict(), dir_path + "_ddqn_model.pt")
 
     def load(self, device, target: bool = False):
+        '''Load the model'''
         dir_path = "trained_model/target" if target else "trained_model/current"
         os.makedirs(os.path.dirname(dir_path), exist_ok=True)
         self.load_state_dict(
