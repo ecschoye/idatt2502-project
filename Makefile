@@ -119,7 +119,7 @@ else
 endif
 
 .PHONY: log-ppo
-render-ddqn: ## To log trained ppo model
+log-ppo: ## To log trained ppo model
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
 	cd src && \
