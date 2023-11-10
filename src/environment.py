@@ -121,6 +121,7 @@ class PixelNormalize(gym.ObservationWrapper):
 
 
 def create_mario_env(map="SuperMarioBros-v0"):
+    """Creates a Super Mario Bros environment with wrappers"""
     env = FrameSkipWrapper(gym_super_mario_bros.make(map))
     env = DownsampleAndGreyscale(env)
     env = FrameToTensor(env)

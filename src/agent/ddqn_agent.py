@@ -11,9 +11,9 @@ from utils.config import DDQNParameters
 
 
 class DDQNAgent:
-    '''
+    """
     Double Deep Q Network Agent class that defines the agent's behavior.
-    '''
+    """
 
     def __init__(
         self,

@@ -14,6 +14,7 @@ ENV_NAME = DDQNTrainingParameters.ENV_NAME
 
 
 def train_mario(log=False):
+    """Trains the agent with DDQN algorithm and logs the results to Neptune."""
     print("Creating environment")
     env = create_mario_env(ENV_NAME)
     state_space = env.observation_space.shape
@@ -113,6 +114,7 @@ def train_mario(log=False):
 
 
 def setup_neptune_logger(agent, num_episodes):
+    """Sets up Neptune logger with proper parameters."""
     logger = NeptuneRun(
         params={
             "gamma": agent.gamma,
@@ -134,6 +136,7 @@ def setup_neptune_logger(agent, num_episodes):
 
 
 def render_mario():
+    """Render the ddqn agent playing the game of Mario."""
     env = create_mario_env(ENV_NAME)
     state_space = env.observation_space.shape
     action_space = env.action_space.n
@@ -168,6 +171,7 @@ def render_mario():
 
 
 def log_model_version():
+    """Log the model version to Neptune."""
     env = create_mario_env()
     state_space = env.observation_space.shape
     action_space = env.action_space.n
