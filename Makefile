@@ -91,7 +91,7 @@ else
 endif
 
 .PHONY: log-ddqn
-render-ddqn: ## To log trained ddqn model
+log-ddqn: ## To log trained ddqn model
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
 	cd src && \
@@ -105,7 +105,7 @@ else
 endif
 
 .PHONY: render-ppo
-render-ppo: ## To render trained ppo
+log-ppo: ## To render trained ppo
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
 	cd src && \
@@ -119,7 +119,7 @@ else
 endif
 
 .PHONY: log-ppo
-render-ddqn: ## To log trained ppo model
+log-ppo: ## To log trained ppo model
 ifeq ($(OS),Windows_NT)
 	$(ACTIVATE_VENV) && \
 	cd src && \
