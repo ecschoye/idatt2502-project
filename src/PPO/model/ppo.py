@@ -99,7 +99,7 @@ class PPO:
         self.run_notes = ""  # Notes for the run
 
         """
-        Update passed hyperparameters.
+        Update passed hyperparameters
         """
         if hyperparameters is not None:
             for param, val in hyperparameters.items():
@@ -146,8 +146,8 @@ class PPO:
             loss = []
 
             for _ in range(self.n_updates_per_iteration):
-                # Introducing dynamic learining rate that
-                # decreases as the training advances
+                # Introducing dynamic learining rate
+                # that decreases as the training advances
                 frac = (t_so_far - 1.0) / total_timesteps
                 new_lr = self.lr * (1.0 - frac)
                 new_lr = max(new_lr, 0.000001)
@@ -317,7 +317,9 @@ class PPO:
             self.logger["batch_rews"].append(sum_rewards)
 
         # Reshape data as tensors in the shape specified before returning
-        batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
+        #batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
+        batch_obs_np = np.array(batch_obs)
+        batch_obs = torch.tensor(batch_obs_np, dtype=torch.float32).to(self.device)
         batch_acts = torch.tensor(batch_acts, dtype=torch.long).to(self.device)
         batch_log_probs = torch.tensor(batch_log_probs, dtype=torch.float32).to(
             self.device
