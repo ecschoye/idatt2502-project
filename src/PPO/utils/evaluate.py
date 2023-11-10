@@ -1,6 +1,7 @@
 import torch
-from torch.distributions import Categorical
 import torch.nn.functional as F
+from torch.distributions import Categorical
+
 
 def evaluate(policy, env, render=False):
     if torch.cuda.is_available():

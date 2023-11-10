@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-import numpy as np
+
 
 class DiscreteActorCriticNN(nn.Module):
     def __init__(self, in_dim, out_dim):
@@ -32,4 +32,3 @@ class DiscreteActorCriticNN(nn.Module):
         x = self.conv(x)
         x = x.view(x.size(0), -1)
         return self.fc(x)
-
