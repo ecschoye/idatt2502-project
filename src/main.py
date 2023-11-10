@@ -1,22 +1,29 @@
 import argparse
 
-from training.ddqn_training import (
-    train_mario,
-    render_mario,
-    log_model_version
-)
+from training.ddqn_training import log_model_version, render_mario, train_mario
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Machine Learning Project Options")
-    parser.add_argument("option", nargs="?", default="ddqn", type=str,
-                        help="Select an option: 'ddqn' for DDQN training, "
-                             "'ppo' for PPO training, 'render-ddqn' to render DDQN, "
-                             "'render-ppo' to render PPO, 'log-ddqn' to log DDQN model, "
-                             "'log-ppo' to log PPO model")
-    parser.add_argument("--log", action="store_true",
-                        help="Enable logging (only applicable with 'ddqn' or 'ppo')")
-    parser.add_argument("--log-model", action="store_true",
-                        help="Enable model logging (only applicable with 'ddqn' or 'ppo')")
+    parser.add_argument(
+        "option",
+        nargs="?",
+        default="ddqn",
+        type=str,
+        help="Select an option: 'ddqn' for DDQN training, "
+        "'ppo' for PPO training, 'render-ddqn' to render DDQN, "
+        "'render-ppo' to render PPO, 'log-ddqn' to log DDQN model, "
+        "'log-ppo' to log PPO model",
+    )
+    parser.add_argument(
+        "--log",
+        action="store_true",
+        help="Enable logging (only applicable with 'ddqn' or 'ppo')",
+    )
+    parser.add_argument(
+        "--log-model",
+        action="store_true",
+        help="Enable model logging (only applicable with 'ddqn' or 'ppo')",
+    )
 
     args = parser.parse_args()
 
@@ -45,4 +52,7 @@ if __name__ == "__main__":
         print("Logging PPO Model")
         # log_model_version()
     else:
-        print("Invalid option. Please select an option (ddqn, ppo, render_ddqn, render_ppo).")
+        print(
+            "Invalid option. Please select an option "
+            "(ddqn, ppo, render_ddqn, render_ppo)."
+        )

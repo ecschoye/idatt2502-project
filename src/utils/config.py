@@ -8,7 +8,7 @@ class DDQNParameters(Enum):
     GAMMA = 0.90
     EPSILON = 1.0
     EPSILON_MIN = 0.01
-    EPSILON_DECAY_RATE = 10 ** 5
+    EPSILON_DECAY_RATE = 10**5
     TARGET_UPDATE_FREQUENCY = 5000
     PRETRAINED_PATH = None
 

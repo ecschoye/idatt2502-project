@@ -1,13 +1,12 @@
 import math
-import random
 
 import numpy as np
 import torch
 import torch.nn as nn
 
 from model.dqn import DQN
-from utils.experience_replay_buffer import ExperienceReplayBuffer
 from utils.config import DDQNParameters
+from utils.experience_replay_buffer import ExperienceReplayBuffer
 
 
 class DDQNAgent:
