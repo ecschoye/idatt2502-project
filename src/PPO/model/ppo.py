@@ -195,7 +195,7 @@ class PPO:
                     self.logger["kl_divergence_breaks"] += 1
                     break
             
-            self.logger["actor_losses"] = loss
+            self.logger["batch_actor_loss"] = loss
             self.logger["n_episodes"] += len(batch_lens)
 
             if self.log: 
@@ -283,11 +283,13 @@ class PPO:
             batch_rews.append(ep_rews)
             batch_vals.append(ep_vals)
             batch_dones.append(ep_dones)
-
-            if np.sum(ep_rews) > batch_best_rews:
-                batch_best_rews = np.sum(ep_rews)
+            
+            sum_rewards = np.sum(ep_rews)
+            if sum_rewards > batch_best_rews:
+                batch_best_rews = sum_rewards
                 if self.capture_frames: 
                     batch_best_frames = ep_frames
+            self.logger["batch_rews"].append(sum_rewards)
 
         # Reshape data as tensors in the shape specified before returning
         batch_obs = torch.tensor(batch_obs, dtype=torch.float32).to(self.device)
@@ -297,8 +299,7 @@ class PPO:
         ) # TODO maybe use flatten()
 
         # Log the episodic returns and episodic lengths in this batch.
-        self.logger["batch_rews"] = batch_rews
-        self.logger["batch_lens"] = batch_lens
+        self.logger["batch_lens"].append(batch_lens)
         self.logger["batch_best_rews"] = batch_best_rews
         self.logger["batch_best_frames"] = batch_best_frames
 
@@ -354,7 +355,7 @@ class PPO:
             Timesteps so far: {self.logger['t_so_far']}\n
             Average length of batched episodes: {np.mean(self.logger['batch_lens'])}\n
             Average reward of batched episodes: {np.mean([np.sum(ep_rews) for ep_rews in self.logger['batch_rews']])}\n
-            Average actor loss: {np.mean([losses.float().mean().cpu() for losses in self.logger['actor_losses']])}\n
+            Average actor loss: {np.mean([losses.float().mean().cpu() for losses in self.logger['batch_actor_loss']])}\n
             Best batch reward: {self.logger['batch_best_rews']}\n
             Number of episodes: {self.logger['n_episodes']}\n
             KL divergence breaks: {self.logger['kl_divergence_breaks']}\n
@@ -365,11 +366,11 @@ class PPO:
         self.neptune_logger.log_frames(self.logger["batch_best_frames"], self.logger["n_episodes"])
         self.neptune_logger.log_lists({
             "train/episode_rewards": self.logger["batch_rews"],
-            "train/episode_lengths": self.logger["batch_lens"],
-            "train/episode_best_rewards": self.logger["batch_best_rews"],
-            "train/actor_loss": self.logger["actor_losses"],
+            "train/episode_lengths": self.logger["batch_lens"] ,
+            "train/actor_loss": self.logger["batch_actor_loss"],
         })
         self.neptune_logger.log_epoch({
+            "train/episode_best_rewards": self.logger["batch_best_rews"],
             "train/lr": self.logger["lr"],
             "train/n_episodes": self.logger["n_episodes"],
             "train/kl_divergence_breaks": self.logger["kl_divergence_breaks"],
@@ -382,4 +383,3 @@ class PPO:
         self.logger["batch_best_rews"] = 0
         self.logger["batch_best_frames"] = []
         self.logger["batch_actor_loss"] = []
-        self.logger["actor_losses"] = []
