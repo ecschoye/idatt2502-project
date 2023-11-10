@@ -20,8 +20,10 @@ Bros evniroment.
 
 ## Requirements
 Here are the requirements to run the project:
-- Python >= 3.10.8
-- Preferably Make (For a easier setup of project)
+- Python
+
+Prefered requirements for easier setup and running of project:
+- Make
 
 ### Windows
 - Visual Studio C++ build tools
@@ -42,19 +44,18 @@ Pyhton3 is set to standard and if your computer uses python instead of python3 y
 make setup PYTHON=python
 ```
 
-### Run
-Make sure that you use the virtueal environment created in the setup section.
-#### To activate the environment in commandline manually:
-- Windows:
-``` bash
-cd venv/scripts && activate && cd .. && cd ..
-```
-- Other:
+#### Neptun
+An .env file is required to use Neptun for logging the training of a model.
+Example of the contents needed for Neptun:
 ```bash
-cd venv/bin && activate && cd .. && cd ..
+NEPTUNE_API_TOKEN="YOUR_API_KEY"
+NEPTUNE_PROJECT_NAME="YOUR_NEPTUN_PROJECT_NAME"
 ```
 
-#### Train and render
+### Running the project
+The commands under activates the environment created in the seupup section and then runs the python code.
+
+#### Train the models
 This function activates the environment and then trains the ddqn.
 
 ``` bash
@@ -67,6 +68,7 @@ This function activates the environment and then trains the ppo.
 make ppo
 ```
 
+#### Render trained models
 This function activates the environment and then renders a trained model of ddqn.
 ``` bash
 make render-ddqn
@@ -82,16 +84,25 @@ You can specify flags for both the ppo and ddqn to log the training to Neptun.
 You can use these args on both ppo and ddqn. The args can also be combined. 
 To specify flags for logging use the commands under:
 
+##### Log training
 Logs the traning to make graphs on Neptun
 ```bash
 make ddqn args="--log"
 ```
 
+##### Log the completed model
 Logs the model to make graphs on Neptun
 ```bash
 make ddqn args="--log-model"
 ```
 
+##### Log training and the completed model
+Logs the training and the model to make graphs on Neptun
+```bash
+make ddqn args="--log --log-model"
+```
+
+##### Python options
 Pyhton3 is set to standard and if your computer uses python instead of python3 you can overwrite this with the command under:
 
 ```bash
@@ -109,3 +120,18 @@ This commands removes the virtual environment created in the setup section. You 
 ```bash
 make clean
 ```
+
+## Example runs
+Here are some example runs:
+
+### DDQN
+Example runs with DDQN:
+
+![DDQN Run](gifs\ddqn_super_mario_1.gif)
+
+![DDQN Run](gifs\ddqn_super_mario_2.gif)
+
+### PPO
+An example run with PPO:
+
+![DDQN Run](gifs\ppo_super_mario_1.gif)
