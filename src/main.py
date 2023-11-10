@@ -1,6 +1,6 @@
 import argparse
 
-from training.ddqn_training import DDQNTrainer, DDQNLogger, DDQNRenderer
+from training.ddqn_training import DDQNLogger, DDQNRenderer, DDQNTrainer
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Machine Learning Project Options")
