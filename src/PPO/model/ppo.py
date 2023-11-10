@@ -6,8 +6,8 @@ from torch import nn
 from torch.distributions import Categorical
 from torch.optim import Adam
 import torch.nn.functional as F
-from ..network.network import DiscreteActorCriticNN
-from src.neptune_wrapper import NeptuneRun
+from PPO.network.network import DiscreteActorCriticNN
+from neptune_wrapper import NeptuneRun
 
 class PPO: 
     def __init__(self, env, hyperparameters=None):

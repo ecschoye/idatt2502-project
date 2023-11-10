@@ -1,9 +1,9 @@
 import torch
 import os
-from src.environment import create_mario_env
-from src.PPO.network.network import DiscreteActorCriticNN
-from src.PPO.model.ppo import PPO
-from src.PPO.utils.evaluate import evaluate
+from environment import create_mario_env
+from PPO.network.network import DiscreteActorCriticNN
+from PPO.model.ppo import PPO
+from PPO.utils.evaluate import evaluate
 from PPO.utils.ppo_parameters import PPOHyperparameters
 
 ACTOR_PATH = "./src/PPO/network/ppo_actor.pth"
