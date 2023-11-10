@@ -28,8 +28,14 @@ Prefered requirements for easier setup and running of project:
 ### Windows
 - Visual Studio C++ build tools
 
+## Help
+To list all the Make commands use the command under:
+```bash
+make help
+```
+
 ## How to run
-The commands used for the project assumes that you have Make installed. If you don't have it, you will find the commands you need in the Makefile
+The guide for running the project assumes that you have Make installed. If you don't have it, you will find the commands you need in the Makefile
 
 ### Setup
 This function creates a virtual environment for all the dependecies required for running the project and installs them.
