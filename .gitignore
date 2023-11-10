@@ -132,3 +132,4 @@ venv
 
 *.pt
 *.pkl
+*.pth
