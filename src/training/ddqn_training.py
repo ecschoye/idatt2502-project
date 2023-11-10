@@ -121,8 +121,6 @@ class DDQNTrainer:
                 "batch_size": agent.batch_size,
                 "memory_size": agent.memory_size,
                 "copy": agent.target_update_frequency,
-                "action_space": agent.action_space,
-                "state_space": agent.state_space,
                 "num_episodes": num_episodes,
             },
             description="DDQN training run",
