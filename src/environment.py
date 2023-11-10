@@ -1,13 +1,11 @@
 import collections
+
 import cv2
 import gym
 import gym_super_mario_bros
 import numpy as np
-from gym.utils.play import play
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
-
-from neptune_wrapper import NeptuneRun
 
 
 class FrameSkipWrapper(gym.Wrapper):
@@ -55,12 +53,8 @@ class DownsampleAndGreyscale(gym.ObservationWrapper):
             img = np.reshape(frame, [240, 256, 3]).astype(np.float32)
         else:
             assert False, "Unknown resolution."
-        img = (
-            img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
-        )
-        resized_screen = cv2.resize(
-            img, (84, 110), interpolation=cv2.INTER_AREA
-        )
+        img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
+        resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
 
         x_t = resized_screen[18:102, :]
         x_t = np.reshape(x_t, [84, 84, 1])
@@ -100,9 +94,7 @@ class BufferWrapper(gym.ObservationWrapper):
         )
 
     def reset(self):
-        self.buffer = np.zeros_like(
-            self.observation_space.low, dtype=self.dtype
-        )
+        self.buffer = np.zeros_like(self.observation_space.low, dtype=self.dtype)
         return self.observation(self.env.reset())
 
     def observation(self, observation):
