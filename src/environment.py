@@ -127,38 +127,3 @@ def create_mario_env(map="SuperMarioBros-v0"):
     env = BufferWrapper(env, 4)
     env = PixelNormalize(env)
     return JoypadSpace(env, SIMPLE_MOVEMENT)
-
-
-class MarioEnvironment:
-    def __init__(self):
-        self.env = create_mario_env()
-
-    # Test run with random move
-    def test_run(self, log=False):
-        if log:
-            logger = NeptuneRun(params={"learning_rate": 0.0})
-        done = True
-        frames = []
-        rewards = []
-        for step in range(100):
-            if done:
-                state = self.env.reset()
-            state, reward, done, info = self.env.step(
-                self.env.action_space.sample()
-            )
-
-            rewards.append(reward)
-            frames.append(self.env.frame)
-            # self.env.render()
-        self.env.close()
-        if log:
-            logger.log_lists({"rewards": rewards})
-            logger.log_frames(frames)
-            logger.finish()
-
-    # Play with keyboard
-    def play(self):
-        play(
-            gym_super_mario_bros.make("SuperMarioBros-v0"),
-            self.env.get_keys_to_action(),
-        )
