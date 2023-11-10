@@ -1,13 +1,11 @@
 import collections
+
 import cv2
 import gym
 import gym_super_mario_bros
 import numpy as np
-from gym.utils.play import play
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
-
-from neptune_wrapper import NeptuneRun
 
 
 class FrameSkipWrapper(gym.Wrapper):
@@ -55,12 +53,8 @@ class DownsampleAndGreyscale(gym.ObservationWrapper):
             img = np.reshape(frame, [240, 256, 3]).astype(np.float32)
         else:
             assert False, "Unknown resolution."
-        img = (
-            img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
-        )
-        resized_screen = cv2.resize(
-            img, (84, 110), interpolation=cv2.INTER_AREA
-        )
+        img = img[:, :, 0] * 0.299 + img[:, :, 1] * 0.587 + img[:, :, 2] * 0.114
+        resized_screen = cv2.resize(img, (84, 110), interpolation=cv2.INTER_AREA)
 
         x_t = resized_screen[18:102, :]
         x_t = np.reshape(x_t, [84, 84, 1])
@@ -100,9 +94,7 @@ class BufferWrapper(gym.ObservationWrapper):
         )
 
     def reset(self):
-        self.buffer = np.zeros_like(
-            self.observation_space.low, dtype=self.dtype
-        )
+        self.buffer = np.zeros_like(self.observation_space.low, dtype=self.dtype)
         return self.observation(self.env.reset())
 
     def observation(self, observation):
@@ -121,44 +113,10 @@ class PixelNormalize(gym.ObservationWrapper):
 
 
 def create_mario_env(map="SuperMarioBros-v0"):
+    """Creates a Super Mario Bros environment with wrappers"""
     env = FrameSkipWrapper(gym_super_mario_bros.make(map))
     env = DownsampleAndGreyscale(env)
     env = FrameToTensor(env)
     env = BufferWrapper(env, 4)
     env = PixelNormalize(env)
     return JoypadSpace(env, SIMPLE_MOVEMENT)
-
-
-class MarioEnvironment:
-    def __init__(self):
-        self.env = create_mario_env()
-
-    # Test run with random move
-    def test_run(self, log=False):
-        if log:
-            logger = NeptuneRun(params={"learning_rate": 0.0})
-        done = True
-        frames = []
-        rewards = []
-        for step in range(100):
-            if done:
-                state = self.env.reset()
-            state, reward, done, info = self.env.step(
-                self.env.action_space.sample()
-            )
-
-            rewards.append(reward)
-            frames.append(self.env.frame)
-            # self.env.render()
-        self.env.close()
-        if log:
-            logger.log_lists({"rewards": rewards})
-            logger.log_frames(frames)
-            logger.finish()
-
-    # Play with keyboard
-    def play(self):
-        play(
-            gym_super_mario_bros.make("SuperMarioBros-v0"),
-            self.env.get_keys_to_action(),
-        )

@@ -7,22 +7,23 @@ from tqdm import tqdm
 from agent.ddqn_agent import DDQNAgent
 from environment import create_mario_env
 from neptune_wrapper import NeptuneModels, NeptuneRun
+from utils.config import DDQNTrainingParameters
 
-num_episodes = 10
-env_name = "SuperMarioBros-v0"
+NUM_EPISODES = DDQNTrainingParameters.NUM_EPISODES
+ENV_NAME = DDQNTrainingParameters.ENV_NAME
 
-def train_mario(pretrained=False, log=False):
+
+def train_mario(log=False):
+    """Trains the agent with DDQN algorithm and logs the results to Neptune."""
     print("Creating environment")
-    env = create_mario_env(env_name)
+    env = create_mario_env(ENV_NAME)
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
     # Initialize DDQN
     agent = DDQNAgent(env, state_space, action_space)
-    if pretrained:
-        agent.load()
 
-    print("Training for {} episodes".format(num_episodes))
+    print("Training for {} episodes".format(NUM_EPISODES))
     total_rewards = []
     max_episode_reward = 0
     interval_reward = 0
@@ -30,13 +31,12 @@ def train_mario(pretrained=False, log=False):
 
     # init logger with proper params
     if log:
-        logger = setup_neptune_logger(agent, num_episodes)
+        logger = setup_neptune_logger(agent, NUM_EPISODES)
 
     env.reset()
-    for episode in tqdm(range(num_episodes)):
+    for episode in tqdm(range(NUM_EPISODES)):
         state = env.reset()
         state = torch.tensor(np.array([state]))
-        # print("State shape in train_mario:", state.shape)
         total_reward = 0
         steps = 0
         frames = []
@@ -88,7 +88,7 @@ def train_mario(pretrained=False, log=False):
                     logged_flags,
                 )
             )
-            if log and num_episodes >= 100:
+            if log and NUM_EPISODES >= 100:
                 logger.log_epoch(
                     {"train/avg_reward_per_10_episodes": interval_reward / 10}
                 )
@@ -114,6 +114,7 @@ def train_mario(pretrained=False, log=False):
 
 
 def setup_neptune_logger(agent, num_episodes):
+    """Sets up Neptune logger with proper parameters."""
     logger = NeptuneRun(
         params={
             "gamma": agent.gamma,
@@ -135,7 +136,8 @@ def setup_neptune_logger(agent, num_episodes):
 
 
 def render_mario():
-    env = create_mario_env(env_name)
+    """Render the ddqn agent playing the game of Mario."""
+    env = create_mario_env(ENV_NAME)
     state_space = env.observation_space.shape
     action_space = env.action_space.n
 
@@ -169,6 +171,7 @@ def render_mario():
 
 
 def log_model_version():
+    """Log the model version to Neptune."""
     env = create_mario_env()
     state_space = env.observation_space.shape
     action_space = env.action_space.n
@@ -188,7 +191,7 @@ def log_model_version():
             "copy": agent.target_update_frequency,
             "action_space": agent.action_space,
             "state_space": agent.state_space,
-            "num_episodes": num_episodes,
+            "num_episodes": NUM_EPISODES,
         },
         ["../trained_model", "../experience_replay_buffer_data"],
     )
