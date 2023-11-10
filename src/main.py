@@ -1,6 +1,6 @@
 import argparse
 
-from training.ddqn_training import DDQNTrainer, DDQNLogger, DDQNRenderer
+from DDQN.training.ddqn_training import DDQNLogger, DDQNRenderer, DDQNTrainer
 from PPO.ppo_trainer import PPOTrainer
 
 if __name__ == "__main__":
@@ -12,18 +12,17 @@ if __name__ == "__main__":
         type=str,
         help="Select an option: 'ddqn' for DDQN training, "
         "'ppo' for PPO training, 'render-ddqn' to render DDQN, "
-        "'render-ppo' to render PPO, 'log-ddqn' to log DDQN model, "
-        "'log-ppo' to log PPO model",
+        "'render-ppo' to render PPO, 'log-ddqn' to log DDQN model, ",
     )
     parser.add_argument(
         "--log",
         action="store_true",
-        help="Enable logging (only applicable with 'ddqn' or 'ppo')",
+        help="Enable logging (only applicable with 'ddqn')",
     )
     parser.add_argument(
         "--log-model",
         action="store_true",
-        help="Enable model logging (only applicable with 'ddqn' or 'ppo')",
+        help="Enable model logging (only applicable with 'ddqn')",
     )
 
     args = parser.parse_args()

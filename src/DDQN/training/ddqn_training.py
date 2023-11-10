@@ -4,16 +4,19 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-from agent.ddqn_agent import DDQNAgent
+from DDQN.agent.ddqn_agent import DDQNAgent
 from environment import create_mario_env
 from neptune_wrapper import NeptuneModels, NeptuneRun
-from utils.config import DDQNTrainingParameters
+from DDQN.utils.config import DDQNTrainingParameters
 
 NUM_EPISODES = DDQNTrainingParameters.NUM_EPISODES.value
 ENV_NAME = DDQNTrainingParameters.ENV_NAME.value
 
 
 class DDQNTrainer:
+    """
+    Class for training a DDQN agent
+    """
     def __init__(self):
         self.num_episodes = NUM_EPISODES
         self.env = create_mario_env(ENV_NAME)
@@ -21,6 +24,10 @@ class DDQNTrainer:
         self.flag_count = 0
 
     def train(self, log=False):
+        """
+        Train the agent for a number of episodes
+        :param log: Whether to log to Neptune.ai
+        """
         print("Training for {} episodes".format(self.num_episodes))
         total_rewards = []
         max_episode_reward = 0
@@ -40,8 +47,6 @@ class DDQNTrainer:
             total_reward = 0
             steps = 0
             while True:
-                if episode % 10 == 0:
-                    self.env.render()
                 action = self.agent.act(state)
                 steps += 1
 
@@ -138,11 +143,17 @@ class DDQNTrainer:
 
 
 class DDQNRenderer:
+    """
+    Class for rendering a trained DDQN agent
+    """
     def __init__(self):
         self.env = create_mario_env(ENV_NAME)
         self.agent = DDQNAgent(self.env, self.env.observation_space.shape, self.env.action_space.n)
 
     def render(self):
+        """
+        Render the agent playing the game
+        """
         self.agent.load()
         state = self.env.reset()
         state = torch.tensor(np.array([state]), dtype=torch.float32)
@@ -165,11 +176,17 @@ class DDQNRenderer:
 
 
 class DDQNLogger:
+    """
+    Logs DDQN model to Neptune.ai
+    """
     def __init__(self):
         self.env = create_mario_env(ENV_NAME)
         self.agent = DDQNAgent(self.env, self.env.observation_space.shape, self.env.action_space.n)
 
     def log(self):
+        """
+        Logs DDQN model to Neptune.ai
+        """
         self.agent.load()
         logger = NeptuneModels()
         logger.model_version(

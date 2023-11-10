@@ -4,9 +4,9 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from model.dqn import DQN
-from utils.config import DDQNParameters
-from utils.experience_replay_buffer import ExperienceReplayBuffer
+from DDQN.model.dqn import DQN
+from DDQN.utils.config import DDQNParameters
+from DDQN.utils.experience_replay_buffer import ExperienceReplayBuffer
 
 
 class DDQNAgent:

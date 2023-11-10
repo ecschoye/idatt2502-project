@@ -9,12 +9,14 @@ ifeq ($(OS),Windows_NT)
     PIP = pip
 else
     UNAME_S := $(shell uname -s)
-    VENV_PATH = source $(VENV_NAME)/bin/activate
+    VENV_PATH = $(VENV_NAME)/bin/activate
+    ACTIVATE_VENV = . $(VENV_PATH)
     RMDIR = rm -rf
     PIP = pip3
 endif
 
 ifeq ($(UNAME_S),$(MAC))
+    ACTIVATE_VENV = source $(VENV_PATH)
     TORCH_INSTALL_CMD := $(PIP) install torch torchvision torchaudio
 else
     TORCH_INSTALL_CMD := $(PIP) install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
@@ -28,7 +30,7 @@ ifeq ($(OS),Windows_NT)
 	$(PIP) install -r $(REQUIREMENTS_FILE) && \
 	$(TORCH_INSTALL_CMD)
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	$(PIP) install -r $(REQUIREMENTS_FILE) && \
 	$(TORCH_INSTALL_CMD)
 endif
@@ -56,7 +58,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) main.py ddqn ${args} && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py ddqn ${args} && \
 	deactivate
@@ -70,7 +72,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) main.py ppo ${args} && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py ppo ${args} && \
 	deactivate
@@ -84,7 +86,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) main.py render-ddqn && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py render-ddqn && \
 	deactivate
@@ -98,7 +100,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) main.py log-ddqn && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py log-ddqn && \
 	deactivate
@@ -112,7 +114,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) main.py render-ppo && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py render-ppo && \
 	deactivate
@@ -126,7 +128,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) main.py log-ppo && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	cd src && \
 	$(PYTHON) main.py log-ppo && \
 	deactivate
@@ -144,7 +146,7 @@ ifeq ($(OS),Windows_NT)
 	flake8 --max-line-length 88 src && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	black --check src && \
 	isort --check-only src && \
 	flake8 --max-line-length 88 src && \
@@ -158,7 +160,7 @@ ifeq ($(OS),Windows_NT)
 	black src && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	black src && \
 	deactivate
 endif
@@ -170,7 +172,7 @@ ifeq ($(OS),Windows_NT)
 	isort src && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	isort src && \
 	deactivate
 endif
@@ -182,7 +184,7 @@ ifeq ($(OS),Windows_NT)
 	flake8 --max-line-length 88 src && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	flake8 --max-line-length 88 src && \
 	deactivate
 endif
@@ -194,7 +196,7 @@ ifeq ($(OS),Windows_NT)
 	$(PYTHON) list_make_commands.py && \
 	deactivate
 else
-	$(VENV_PATH) && \
+	$(ACTIVATE_VENV) && \
 	$(PYTHON) list_make_commands.py && \
 	deactivate
 endif

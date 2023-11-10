@@ -62,7 +62,7 @@ class ExperienceReplayBuffer:
         """
         Save the current replay buffer.
         """
-        dir_path = "experience_replay_buffer_data/"
+        dir_path = "DDQN/experience_replay_buffer_data/"
         os.makedirs(dir_path, exist_ok=True)
         torch.save(self.state_buffer, os.path.join(dir_path, "states.pt"))
         torch.save(self.action_buffer, os.path.join(dir_path, "actions.pt"))
@@ -83,7 +83,7 @@ class ExperienceReplayBuffer:
         """
         Load the state of the buffer from disk.
         """
-        dir_path = "experience_replay_buffer_data/"
+        dir_path = "DDQN/experience_replay_buffer_data/"
         os.makedirs(dir_path, exist_ok=True)
         self.state_buffer = torch.load(os.path.join(dir_path, "states.pt"))
         self.action_buffer = torch.load(os.path.join(dir_path, "actions.pt"))
