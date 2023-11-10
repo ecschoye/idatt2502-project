@@ -1,13 +1,16 @@
+import time
+
 import torch
 import torch.nn.functional as F
-from torch.distributions import Categorical
 
 
-def evaluate(policy, env, render=False):
+def evaluate(policy, env, render=False, render_delay=0.04):
     if torch.cuda.is_available():
         policy = policy.cuda()
         # Rollout with the policy and environment, and log each episode's data
-    for ep_num, (ep_len, ep_ret) in enumerate(rollout(policy, env, render)):
+    for ep_num, (ep_len, ep_ret) in enumerate(
+        rollout(policy, env, render, render_delay)
+    ):
         _log_summary(ep_len=ep_len, ep_ret=ep_ret, ep_num=ep_num)
 
 
@@ -34,7 +37,7 @@ def _log_summary(ep_len, ep_ret, ep_num):
     print(flush=True)
 
 
-def rollout(policy, env, render):
+def rollout(policy, env, render, delay):
     """
     Returns a generator to roll out each episode given a trained policy and
     environment to test on.
@@ -73,11 +76,13 @@ def rollout(policy, env, render):
             # Render environment if specified, off by default
             if render:
                 env.render()
+                time.sleep(delay)
 
             # Query deterministic action from policy and run it
-            action = F.softmax(policy(obs), dim=1)
-            action_dist = Categorical(action)
-            obs, rew, done, _ = env.step(action_dist.sample().item())
+            obs = torch.tensor(obs, dtype=torch.float)
+            action_probs = F.softmax(policy(obs.unsqueeze(0)), dim=-1)
+            action = torch.multinomial(action_probs, num_samples=1)
+            obs, rew, done, _ = env.step(action.item())
 
             # Sum all episodic rewards as we go along
             ep_ret += rew

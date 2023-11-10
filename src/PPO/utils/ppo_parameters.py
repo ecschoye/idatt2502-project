@@ -3,16 +3,16 @@ class PPOHyperparameters:
     def __init__(self):
         self.hyperparameters = {
             # Run
-            "timesteps_per_batch": 5000,  # timesteps per batch
-            "max_timesteps_per_episode": 800,  # timesteps per episode
+            "timesteps_per_batch": 8000,  # timesteps per batch
+            "max_timesteps_per_episode": 1200,  # timesteps per episode
             # Algorithm
             "gamma": 0.80,  # Discount factor
             "n_updates_per_iteration": 20,  # number of updates per iteration
             "clip": 0.2,  # Recommended
-            "lr": 0.005,  # Learning rate
+            "lr": 0.004,  # Learning rate
             "num_minibatches": 4,  # K in the paper
             "lam": 0.99,  # Lambda for GAE-Lambda
-            "ent_coef": 0.03,  # Entropy coefficient
+            "ent_coef": 0.02,  # Entropy coefficient
             "max_grad_norm": 0.2,  # Gradient clipping threshold
             "target_kl": 0.05,  # Target KL-divergence
             # Misc

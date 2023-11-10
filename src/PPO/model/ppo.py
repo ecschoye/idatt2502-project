@@ -290,7 +290,6 @@ class PPO:
                 obs, rew, done, info = self.env.step(action)
 
                 if info["flag_get"]:
-                    print("JAAAAAAAAAAAA")
                     batch_flags += 1
 
                 if self.capture_frames:

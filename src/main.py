@@ -45,6 +45,9 @@ if __name__ == "__main__":
     elif args.option == "log-ddqn":
         print("Logging DDQN Model")
         DDQNLogger().log()
+    elif args.option == "log-ppo":
+        print("Logging PPO Model")
+        PPOTrainer().log_model()
     else:
         print(
             "Invalid option. Please select an option "

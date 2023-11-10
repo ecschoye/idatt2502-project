@@ -3,16 +3,18 @@ import os
 import torch
 
 from environment import create_mario_env
+from neptune_wrapper import NeptuneModels
 from PPO.model.ppo import PPO
 from PPO.network.network import DiscreteActorCriticNN
 from PPO.utils.evaluate import evaluate
 from PPO.utils.ppo_parameters import PPOHyperparameters
 
-ACTOR_PATH = "./src/PPO/network/ppo_actor.pth"
-CRITIC_PATH = "./src/PPO/network/ppo_critic.pth"
+ACTOR_PATH = "PPO/network/ppo_actor.pth"
+CRITIC_PATH = "PPO/network/ppo_critic.pth"
+MODELS_PATH = "PPO/network"
 
-TIMESTEPS = 50_000
-MAP = "SuperMarioBros-1-1-v0"
+TIMESTEPS = 1_000_000
+MAP = "SuperMarioBros-6-4-v0"
 
 
 class PPOTrainer:
@@ -21,7 +23,7 @@ class PPOTrainer:
         self.env.metadata["render-modes"] = "human"
         self.parameters = PPOHyperparameters()
 
-    def train(self, log=False, load_models=False):
+    def train(self, log=False, load_models=False, timesteps=TIMESTEPS):
         """
         Main Function to run training or testing
         """
@@ -51,7 +53,7 @@ class PPOTrainer:
             else:
                 print("No models found, training from scratch", flush=True)
 
-        self.model.learn(total_timesteps=TIMESTEPS)
+        self.model.learn(total_timesteps=timesteps)
 
     def test(self):
         """
@@ -69,6 +71,20 @@ class PPOTrainer:
                 )
             )
             evaluate(policy, self.env, render=True)
+        else:
+            print("No actor model found, please train the model first")
+
+    def log_model(self, model_folder=MODELS_PATH):
+        """
+        Function to upload the PPO Actor and Critic networks
+        """
+        if os.path.exists(ACTOR_PATH) and os.path.exists(CRITIC_PATH):
+            logger = NeptuneModels()
+            logger.model_version(
+                "MARIO-PPO",
+                self.parameters.get_hyperparameters(),
+                [model_folder],
+            )
         else:
             print("No actor model found, please train the model first")
 
