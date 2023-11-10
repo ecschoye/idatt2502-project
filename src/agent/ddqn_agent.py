@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from model.dqn import DQN
 from utils.experience_replay_buffer import ExperienceReplayBuffer
+from utils.config import DDQNParameters
 
 
 class DDQNAgent:
@@ -15,15 +16,15 @@ class DDQNAgent:
         env,
         state_space,
         action_space,
-        memory_size=20000,
-        batch_size=32,
-        lr=0.00025,
-        gamma=0.90,
-        epsilon=1.0,
-        epsilon_min=0.01,
-        epsilon_decay_rate=10 ** 5,
-        target_update_frequency=5000,
-        pretrained_path=None,
+        memory_size=DDQNParameters.MEMORY_SIZE.value,
+        batch_size=DDQNParameters.BATCH_SIZE.value,
+        lr=DDQNParameters.LEARNING_RATE.value,
+        gamma=DDQNParameters.GAMMA.value,
+        epsilon=DDQNParameters.EPSILON.value,
+        epsilon_min=DDQNParameters.EPSILON_MIN.value,
+        epsilon_decay_rate=DDQNParameters.EPSILON_DECAY_RATE.value,
+        target_update_frequency=DDQNParameters.TARGET_UPDATE_FREQUENCY.value,
+        pretrained_path=DDQNParameters.PRETRAINED_PATH.value,
     ):
         # Environment
         self.env = env
@@ -31,9 +32,7 @@ class DDQNAgent:
         self.action_space = action_space
 
         # Device
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu"
-        )
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         if not torch.cuda.is_available():
             print("Warning: CUDA not available, running on CPU.")
 
@@ -50,12 +49,8 @@ class DDQNAgent:
 
         # Memory and models
         self.memory = ExperienceReplayBuffer(state_space, self.memory_size)
-        self.local_model = DQN(self.state_space, self.action_space).to(
-            self.device
-        )
-        self.target_model = DQN(self.state_space, self.action_space).to(
-            self.device
-        )
+        self.local_model = DQN(self.state_space, self.action_space).to(self.device)
+        self.target_model = DQN(self.state_space, self.action_space).to(self.device)
         self.steps = 0
 
         # Load pretrained model
@@ -151,10 +146,7 @@ class DDQNAgent:
         account whether the next state is terminal (done).
         """
         return reward + torch.mul(
-            (
-                self.gamma
-                * self.target_model(next_state).max(1).values.unsqueeze(1)
-            ),
+            (self.gamma * self.target_model(next_state).max(1).values.unsqueeze(1)),
             1 - done,
         )
 
