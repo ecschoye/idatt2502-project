@@ -428,6 +428,10 @@ class PPO:
         )
 
     def log_epoch(self):
+        flag_percentage = int(
+            (self.logger["flags"] / len(self.logger["batch_rews"])) * 100
+        )
+
         self.logger["batch_actor_loss"] = [
             tensor.item() for tensor in self.logger["batch_actor_loss"]
         ]
@@ -445,6 +449,7 @@ class PPO:
                 "train/n_episodes": self.logger["n_episodes"],
                 "train/kl_divergence_breaks": self.logger["kl_divergence_breaks"],
                 "train/flags": self.logger["flags"],
+                "train/flags_per_episode_%": flag_percentage,
             }
         )
         self.neptune_logger.log_frames(
