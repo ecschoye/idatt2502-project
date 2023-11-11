@@ -37,7 +37,6 @@ class DDQNTrainer:
         interval_reward = 0
         lowest_frame_count = float("inf")
         logger = None
-        frames = []
 
         # init logger with proper params
         if log:
@@ -49,6 +48,7 @@ class DDQNTrainer:
             state = torch.tensor(np.array([state]))
             total_reward = 0
             steps = 0
+            frames = []
             while True:
                 action = self.agent.act(state)
                 steps += 1
