@@ -141,3 +141,5 @@ Example runs with DDQN:
 An example run with PPO:
 
 <img src="gifs/ppo_super_mario_1.gif" alt="PPO Run" width="400"/>
+
+<img src="gifs/ppo_super_mario_2.gif" alt="PPO Run" width="400"/>
