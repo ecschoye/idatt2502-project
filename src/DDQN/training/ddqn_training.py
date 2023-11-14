@@ -35,7 +35,6 @@ class DDQNTrainer:
         total_rewards = []
         max_episode_reward = 0
         interval_reward = 0
-        lowest_frame_count = float("inf")
         logger = None
 
         # init logger with proper params
@@ -77,10 +76,16 @@ class DDQNTrainer:
                         episode_flags += 1
 
                         current_map_index = episode_flags - 1
-                        if current_map_index not in lowest_frame_counts_per_map or \
-                                len(frames) < lowest_frame_counts_per_map[current_map_index]:
+                        if (
+                            current_map_index not in lowest_frame_counts_per_map
+                            or len(frames)
+                            < lowest_frame_counts_per_map[current_map_index]
+                        ):
                             lowest_frame_counts_per_map[current_map_index] = len(frames)
-                            print(f"New lowest frame count for map {current_map_index}: {len(frames)}")
+                            print(
+                                f"New lowest frame count for map"
+                                f" {current_map_index}: {len(frames)}"
+                            )
 
                             if log and episode >= self.num_episodes * 0.65:
                                 logger.log_frames(frames, episode)
