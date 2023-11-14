@@ -13,8 +13,8 @@ ACTOR_PATH = "PPO/network/ppo_actor.pth"
 CRITIC_PATH = "PPO/network/ppo_critic.pth"
 MODELS_PATH = "PPO/network"
 
-TIMESTEPS = 1_000_000
-MAP = "SuperMarioBros-6-4-v0"
+TIMESTEPS = 50_000
+MAP = "SuperMarioBros-6-2-v0"
 
 
 class PPOTrainer:

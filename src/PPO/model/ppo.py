@@ -367,25 +367,29 @@ class PPO:
         return torch.tensor(batch_advantages, dtype=torch.float32).to(self.device)
 
     def get_action(self, obs):
-        # Query the actor network for a mean action.
+        # Query the actor network for action probabilities.
         obs = torch.tensor(obs, dtype=torch.float).to(self.device)
-        action_probs = F.softmax(
-            self.actor(obs.unsqueeze(0).to(self.device)), dim=-1
-        ).to(self.device)[0]
-        action = torch.multinomial(action_probs, num_samples=1)
-        # Sample an action from the distribution and get its log probability
-        log_prob = torch.log(action_probs[action])
+        action_prob = F.softmax(self.actor(obs.unsqueeze(0).to(self.device)), dim=-1).to(self.device)[0]
+        
+        # Create a categorical distribution from action probabilities.
+        action_dist = Categorical(action_prob)
+        
+        # Sample an action from the distribution and get its log probability.
+        action = action_dist.sample()
+        log_prob = action_dist.log_prob(action)
+
         return action.item(), log_prob.detach().to(self.device)
 
     def evaluate(self, batch_obs, batch_acts):
         # Query critic network for a value V for each obs in batch_obs
         V = self.critic(batch_obs).squeeze()
-        # Calculate the log probabilities of batch actions using most
-        # recent actor network
-        action_prob = F.softmax(self.actor(batch_obs), dim=1).to(self.device)
+        # Process batch_obs for evaluation
+        batch_obs = torch.tensor(batch_obs, dtype=torch.float).to(self.device)
+        action_prob = F.softmax(self.actor(batch_obs), dim=-1).to(self.device)
         action_dist = Categorical(action_prob)
-        log_probs = action_dist.log_prob(batch_acts).to(self.device)
 
+        # Calculate log probabilities of batch actions
+        log_probs = action_dist.log_prob(batch_acts).to(self.device)
         return V, log_probs, action_dist.entropy()
 
     def _print_summary(self):
