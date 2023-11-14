@@ -49,6 +49,8 @@ class DDQNTrainer:
             total_reward = 0
             steps = 0
             frames = []
+            episode_flags = 0
+            lowest_frame_counts_per_map = {}
             while True:
                 action = self.agent.act(state)
                 steps += 1
@@ -72,12 +74,15 @@ class DDQNTrainer:
                 if done:
                     if info["flag_get"]:
                         self.flag_count += 1
+                        episode_flags += 1
 
-                        if len(frames) < lowest_frame_count:
-                            lowest_frame_count = len(frames)
-                            print(f"New lowest frame count: {lowest_frame_count}")
+                        current_map_index = episode_flags - 1
+                        if current_map_index not in lowest_frame_counts_per_map or \
+                                len(frames) < lowest_frame_counts_per_map[current_map_index]:
+                            lowest_frame_counts_per_map[current_map_index] = len(frames)
+                            print(f"New lowest frame count for map {current_map_index}: {len(frames)}")
 
-                            if episode >= self.num_episodes * 0.65:
+                            if log and episode >= self.num_episodes * 0.65:
                                 logger.log_frames(frames, episode)
 
                     if total_reward > max_episode_reward:
