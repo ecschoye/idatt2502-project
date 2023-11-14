@@ -167,9 +167,9 @@ class NeptuneRun:
             rgb_img = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
             vid.write(rgb_img)
         vid.release()
-        self.run["train/animation"].upload_files("animation_{}".format(episode_number))
+        self.run["train/animation"].upload_files("animation_{}.mp4".format(episode_number))
         self.run.wait()
-        os.remove("animation_{}".format(episode_number))
+        os.remove("animation_{}.mp4".format(episode_number))
 
     def finish(self):
         """
