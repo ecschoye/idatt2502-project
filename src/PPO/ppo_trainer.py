@@ -14,7 +14,7 @@ CRITIC_PATH = "PPO/network/ppo_critic.pth"
 MODELS_PATH = "PPO/network"
 
 TIMESTEPS = 50_000
-MAP = "SuperMarioBros-6-2-v0"
+MAP = "SuperMarioBros-8-1-v0"
 
 
 class PPOTrainer:
