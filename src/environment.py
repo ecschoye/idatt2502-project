@@ -8,13 +8,13 @@ from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
 
 
-class FrameSkipWrapper(gym.Wrapper):
+class FrameSkipWrapper(gym.Wrapper, skip=4):
     """
     Wrapper for environment which repeats action
     at a given amount of frames (default = 4).
     """
 
-    def __init__(self, env, skip=4):
+    def __init__(self, env, skip):
         super(FrameSkipWrapper, self).__init__(env)
         self.buffer = collections.deque(maxlen=2)
         self.skip = skip
@@ -112,9 +112,9 @@ class PixelNormalize(gym.ObservationWrapper):
         return np.array(obs).astype(np.float32) / 255.0
 
 
-def create_mario_env(map="SuperMarioBros-v0"):
+def create_mario_env(map="SuperMarioBros-v0", skip=4):
     """Creates a Super Mario Bros environment with wrappers"""
-    env = FrameSkipWrapper(gym_super_mario_bros.make(map))
+    env = FrameSkipWrapper(gym_super_mario_bros.make(map), skip)
     env = DownsampleAndGreyscale(env)
     env = FrameToTensor(env)
     env = BufferWrapper(env, 4)
