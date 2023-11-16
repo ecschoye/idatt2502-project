@@ -3,24 +3,24 @@ class PPOHyperparameters:
     def __init__(self):
         self.hyperparameters = {
             # Run
-            "timesteps_per_batch": 2000,  # timesteps per batch
-            "max_timesteps_per_episode": 400,  # timesteps per episode
+            "timesteps_per_batch": 8000,  # timesteps per batch
+            "max_timesteps_per_episode": 1400,  # timesteps per episode
             # Algorithm
-            "gamma": 0.80,  # Discount factor
-            "n_updates_per_iteration": 16,  # number of updates per iteration
+            "gamma": 0.90,  # Discount factor
+            "n_updates_per_iteration": 10,  # number of updates per iteration
             "clip": 0.2,  # Recommended
             "lr": 0.0005,  # Learning rate
-            "num_minibatches": 4,  # K in the paper
+            "num_minibatches": 8,  # K in the paper
             "lam": 0.99,  # Lambda for GAE-Lambda
             "ent_coef": 0.02,  # Entropy coefficient
             "max_grad_norm": 0.2,  # Gradient clipping threshold
-            "target_kl": 0.05,  # Target KL-divergence
+            "target_kl": 0.1,  # Target KL-divergence
             # Misc
             "save_freq": 1,  # How often we save in number of iterations
             "render": False,  # If we should render during rollout
             "full_render": False,  # Watch full training
             "render_every_i": 1,  # Only render every i iterations
-            "log": False,  # If we push logs to neptune
+            "log": True,  # If we push logs to neptune
             "capture_frames": True,
             "run_notes": "",
         }
