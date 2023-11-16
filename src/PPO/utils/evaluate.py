@@ -41,22 +41,6 @@ def rollout(policy, env, render, delay):
     """
     Returns a generator to roll out each episode given a trained policy and
     environment to test on.
-
-    Parameters:
-            policy - The trained policy to test
-            env - The environment to evaluate the policy on
-            render - Specifies whether to render or not
-
-    Return:
-            A generator object rollout,
-            or iterable, which will return the latest
-            episodic length and return on each iteration of the generator.
-
-    Note:
-            If you're unfamiliar with Python generators, check this out:
-                    https://wiki.python.org/moin/Generators
-            If you're unfamiliar with Python "yield", check this out:
-                    https://stackoverflow.com/questions/231767/what-does-the-yield-keyword-do
     """
     # Rollout until user kills process
     while True:
