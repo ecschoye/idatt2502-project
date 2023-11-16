@@ -13,7 +13,7 @@ ACTOR_PATH = "PPO/network/ppo_actor.pth"
 CRITIC_PATH = "PPO/network/ppo_critic.pth"
 MODELS_PATH = "PPO/network"
 
-TIMESTEPS = 50_000
+TIMESTEPS = 3_000_000
 MAP = "SuperMarioBros-8-1-v0"
 
 
@@ -59,9 +59,10 @@ class PPOTrainer:
         """
         Function to run the actor model and test it
         """
-        obs_dim = self.env.observation_space.shape
-        act_dim = self.env.action_space.n
-        self.env.metadata["render-modes"] = "human"
+        local_env = create_mario_env(MAP, skip = 1)
+        obs_dim = local_env.observation_space.shape
+        act_dim = local_env.action_space.n
+        local_env.env.metadata["render-modes"] = "human"
         policy = DiscreteActorCriticNN(obs_dim, act_dim)
         if os.path.exists(ACTOR_PATH):
             policy.load_state_dict(
@@ -70,7 +71,7 @@ class PPOTrainer:
                     map_location=("cuda" if torch.cuda.is_available() else "cpu"),
                 )
             )
-            evaluate(policy, self.env, render=True)
+            evaluate(policy, local_env, render=True)
         else:
             print("No actor model found, please train the model first")
 

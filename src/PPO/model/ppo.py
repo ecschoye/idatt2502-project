@@ -390,10 +390,6 @@ class PPO:
 
         # Calculate log probabilities of batch actions
         log_probs = action_dist.log_prob(batch_acts).to(self.device)
-
-        print(f"V: {V}")
-        print(f"log_probs: {log_probs}")
-        print(f"action_dist.entropy: {action_dist.entropy}")
         return V, log_probs, action_dist.entropy()
 
     def _print_summary(self):
