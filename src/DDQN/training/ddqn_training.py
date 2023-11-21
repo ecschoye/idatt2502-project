@@ -278,5 +278,8 @@ class DDQNLogger:
                 "state_space": self.agent.state_space,
                 "num_episodes": NUM_EPISODES,
             },
-            ["../trained_model", "../experience_replay_buffer_data"],
+            [
+                "DDQN/trained_model",
+                "DDQN/experience_replay_buffer_data"
+            ],
         )
