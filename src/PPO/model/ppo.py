@@ -1,5 +1,6 @@
 import gc
 import time
+from collections import deque
 
 import numpy as np
 import torch
@@ -60,10 +61,11 @@ class PPO:
             "n_episodes": 0,  # Number of episodes
             "kl_divergence_breaks": 0,  # Number of times KL-divergence breaks
             "flags": 0,  # Flags caught
+            "flags_last_n": deque(maxlen=100),  # Flags caught in last 100 episodes
+            "best_reward": 0.0,  # Best episodic returns
             # Per Batch
             "batch_lens": [],  # Episodic lengths in batch
             "batch_rews": [],  # Episodic returns in batch
-            "batch_best_rews": 0.0,  # Best episodic returns in batch
             "batch_best_frames": [],  # Best frames in batch
             "batch_actor_loss": [],  # Losses of actor network in batch
         }
@@ -291,6 +293,9 @@ class PPO:
 
                 if info["flag_get"]:
                     batch_flags += 1
+                    self.logger["flags_last_n"].append(1)
+                else:
+                    self.logger["flags_last_n"].append(0)
 
                 if self.capture_frames:
                     ep_frames.append(self.env.frame)
@@ -326,9 +331,10 @@ class PPO:
 
         # Log the episodic returns and episodic lengths in this batch.
         self.logger["batch_lens"] = batch_lens
-        self.logger["batch_best_rews"] = batch_best_rews
+        if batch_best_rews > self.logger["best_reward"]:
+            self.logger["best_reward"] = batch_best_rews
         self.logger["batch_best_frames"] = batch_best_frames
-        self.logger["flags"] = batch_flags
+        self.logger["flags"] += batch_flags
 
         # Return batch data
         return (
@@ -413,7 +419,7 @@ class PPO:
                 for losses in self.logger["batch_actor_loss"]
             ]
         )
-        best_batch_reward = self.logger["batch_best_rews"]
+        best_batch_reward = self.logger["best_reward"]
         num_episodes = self.logger["n_episodes"]
         kl_divergence_breaks = self.logger["kl_divergence_breaks"]
         flags_caught = self.logger["flags"]
@@ -434,28 +440,26 @@ class PPO:
         )
 
     def log_epoch(self):
-        flag_percentage = int(
-            (self.logger["flags"] / len(self.logger["batch_rews"])) * 100
-        )
+        flag_percentage = int(sum(self.logger["flags_last_n"]))
 
         self.logger["batch_actor_loss"] = [
             tensor.item() for tensor in self.logger["batch_actor_loss"]
         ]
         self.neptune_logger.log_lists(
             {
-                "train/episode_rewards": self.logger["batch_rews"],
+                "train/reward": self.logger["batch_rews"],
                 "train/episode_lengths": self.logger["batch_lens"],
                 "train/actor_loss": self.logger["batch_actor_loss"],
             }
         )
         self.neptune_logger.log_epoch(
             {
-                "train/episode_best_rewards": self.logger["batch_best_rews"],
+                "train/best_reward": self.logger["best_reward"],
                 "train/lr": self.logger["lr"],
                 "train/n_episodes": self.logger["n_episodes"],
                 "train/kl_divergence_breaks": self.logger["kl_divergence_breaks"],
-                "train/flags": self.logger["flags"],
-                "train/flags_per_episode_%": flag_percentage,
+                "train/flag_total": self.logger["flags"],
+                "train/flag_average": flag_percentage,
             }
         )
         self.neptune_logger.log_frames(
@@ -465,6 +469,5 @@ class PPO:
     def reset_batch_log(self):
         self.logger["batch_lens"] = []
         self.logger["batch_rews"] = []
-        self.logger["batch_best_rews"] = 0
         self.logger["batch_best_frames"] = []
         self.logger["batch_actor_loss"] = []

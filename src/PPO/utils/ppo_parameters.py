@@ -6,13 +6,13 @@ class PPOHyperparameters:
             "timesteps_per_batch": 8000,  # timesteps per batch
             "max_timesteps_per_episode": 1000,  # timesteps per episode
             # Algorithm
-            "gamma": 0.80,  # Discount factor
-            "n_updates_per_iteration": 9,  # number of updates per iteration
+            "gamma": 0.90,  # Discount factor
+            "n_updates_per_iteration": 8,  # number of updates per iteration
             "clip": 0.2,  # Recommended
-            "lr": 0.0006,  # Learning rate
+            "lr": 0.001,  # Learning rate
             "num_minibatches": 8,  # K in the paper
             "lam": 0.99,  # Lambda for GAE-Lambda
-            "ent_coef": 0.03,  # Entropy coefficient
+            "ent_coef": 0.02,  # Entropy coefficient
             "max_grad_norm": 0.2,  # Gradient clipping threshold
             "target_kl": 0.2,  # Target KL-divergence
             # Misc
