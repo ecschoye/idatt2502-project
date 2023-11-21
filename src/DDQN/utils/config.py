@@ -15,4 +15,4 @@ class DDQNParameters(Enum):
 
 class DDQNTrainingParameters(Enum):
     NUM_EPISODES = 11
-    ENV_NAME = "SuperMarioBros-v0"
+    ENV_NAME = "SuperMarioBros-1-1-v0"
