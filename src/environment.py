@@ -8,13 +8,13 @@ from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
 
 
-class FrameSkipWrapper(gym.Wrapper, skip=4):
+class FrameSkipWrapper(gym.Wrapper):
     """
     Wrapper for environment which repeats action
     at a given amount of frames (default = 4).
     """
 
-    def __init__(self, env, skip):
+    def __init__(self, env, skip=4):
         super(FrameSkipWrapper, self).__init__(env)
         self.buffer = collections.deque(maxlen=2)
         self.skip = skip
