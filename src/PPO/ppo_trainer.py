@@ -59,7 +59,7 @@ class PPOTrainer:
         """
         Function to run the actor model and test it
         """
-        local_env = create_mario_env(MAP, skip = 4)
+        local_env = create_mario_env(MAP, skip=4)
         obs_dim = local_env.observation_space.shape
         act_dim = local_env.action_space.n
         local_env.env.metadata["render-modes"] = "human"
