@@ -370,9 +370,8 @@ class PPO:
         # Query the actor network for action probabilities.
         obs = torch.tensor(obs, dtype=torch.float).to(self.device)
         action_prob = F.softmax(
-            self.actor(obs.unsqueeze(0).to(self.device)),
-            dim=-1
-            ).to(self.device)[0]
+            self.actor(obs.unsqueeze(0).to(self.device)), dim=-1
+        ).to(self.device)[0]
 
         # Create a categorical distribution from action probabilities.
         action_dist = Categorical(action_prob)
