@@ -32,10 +32,14 @@ class DDQNTrainer:
         :param log: Whether to log to Neptune.ai
         """
         print("Training for {} episodes".format(self.num_episodes))
+        print(f"Logging is {'on' if log else 'off'}")
         total_rewards = []
-        max_episode_reward = 0
+        best_reward = 0
         interval_reward = 0
         logger = None
+        best_scores_per_stage = {}
+        lowest_frame_count_per_stage = {}
+        flag_count_last_hundred = 0
 
         # init logger with proper params
         if log:
@@ -49,10 +53,11 @@ class DDQNTrainer:
             steps = 0
             frames = []
             episode_flags = 0
-            lowest_frame_counts_per_map = {}
+            current_stage = None
             while True:
                 action = self.agent.act(state)
                 steps += 1
+                logged = False
 
                 next_state, reward, done, info = self.env.step(action)
                 total_reward += reward
@@ -71,27 +76,49 @@ class DDQNTrainer:
                 if log:
                     frames.append(self.env.frame)
                 if done:
+
+                    if info["stage"] != current_stage:
+                        current_stage = info["stage"]
+
                     if info["flag_get"]:
                         self.flag_count += 1
                         episode_flags += 1
+                        flag_count_last_hundred += 1
 
-                        current_map_index = episode_flags - 1
                         if (
-                            current_map_index not in lowest_frame_counts_per_map
-                            or len(frames)
-                            < lowest_frame_counts_per_map[current_map_index]
+                            current_stage not in lowest_frame_count_per_stage
+                            or len(frames) < lowest_frame_count_per_stage[current_stage]
                         ):
-                            lowest_frame_counts_per_map[current_map_index] = len(frames)
+                            lowest_frame_count_per_stage[current_stage] = len(frames)
                             print(
-                                f"New lowest frame count for map"
-                                f" {current_map_index}: {len(frames)}"
+                                f"New lowest frame count for stage {current_stage}:"
+                                f" {len(frames)}"
                             )
 
-                            if log and episode >= self.num_episodes * 0.65:
+                            if log and not logged:
                                 logger.log_frames(frames, episode)
+                                logged = True
 
-                    if total_reward > max_episode_reward:
-                        max_episode_reward = total_reward
+                    if total_reward > best_reward:
+                        best_reward = total_reward
+
+                        print(f"New best run score: {best_reward}")
+                        if log and not logged:
+                            logger.log_frames(frames, episode)
+                            logged = True
+
+                    if (
+                        current_stage not in best_scores_per_stage
+                        or total_reward > best_scores_per_stage[current_stage]
+                    ):
+                        best_scores_per_stage[current_stage] = total_reward
+                        print(
+                            f"New best score for stage {current_stage}:"
+                            f" {total_reward}"
+                        )
+                        if log and not logged:
+                            logger.log_frames(frames, episode)
+                            logged = True
                     break
 
             total_rewards.append(reward)
@@ -100,14 +127,14 @@ class DDQNTrainer:
                 tqdm.write(
                     "Episode: {}, "
                     "Reward: {}, "
-                    "Max Reward: {}, "
+                    "Best Reward: {},"
                     "Epsilon: {}, "
                     "Steps: {}, "
-                    "Flags: {}, "
+                    "Flag total: {}, "
                     "Flag Percentage:{},".format(
                         episode,
                         total_reward,
-                        max_episode_reward,
+                        best_reward,
                         self.agent.epsilon,
                         steps,
                         self.flag_count,
@@ -118,17 +145,43 @@ class DDQNTrainer:
                     logger.log_epoch(
                         {"train/avg_reward_per_10_episodes": interval_reward / 10}
                     )
+                    for stage in best_scores_per_stage:
+                        logger.log_epoch(
+                            {
+                                f"train/best_score_stage_{stage}":
+                                    best_scores_per_stage[
+                                        stage
+                                    ]
+                            }
+                        )
+                    for stage in lowest_frame_count_per_stage:
+                        logger.log_epoch(
+                            {
+                                f"train/lowest_frame_count_stage_{stage}":
+                                    lowest_frame_count_per_stage[
+                                        stage
+                                    ]
+                            }
+                        )
                 interval_reward = 0
                 self.agent.save()
+
+            if episode % 100 == 0:
+                if log:
+                    logger.log_epoch(
+                        {"train/flag_average": flag_count_last_hundred / 100}
+                    )
+                flag_count_last_hundred = 0
+
             if log:
                 logger.log_epoch(
                     {
                         "train/reward": total_reward,
-                        "train/max_episode_reward": max_episode_reward,
+                        "train/best_reward": best_reward,
                         "train/epsilon": self.agent.epsilon,
                         "train/steps": steps,
                         "train/reward_per_step": total_reward / steps,
-                        "train/flags": self.flag_count,
+                        "train/flag_total": self.flag_count,
                     }
                 )
             self.agent.update_epsilon()
