@@ -123,7 +123,7 @@ class DDQNTrainer:
             if log:
                 logger.log_epoch(
                     {
-                        "train/episode_rewards": total_reward,
+                        "train/reward": total_reward,
                         "train/max_episode_reward": max_episode_reward,
                         "train/epsilon": self.agent.epsilon,
                         "train/steps": steps,
