@@ -20,7 +20,7 @@ Bros evniroment.
 
 ## Requirements
 Here are the requirements to run the project:
-- Python
+- Python >=3.9, <3.12
 
 Prefered requirements for easier setup and running of project:
 - Make
