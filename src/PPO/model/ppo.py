@@ -1,6 +1,5 @@
 import gc
 import time
-from collections import deque
 
 import numpy as np
 import torch
@@ -11,6 +10,7 @@ from torch.optim import Adam
 
 from neptune_wrapper import NeptuneRun
 from PPO.network.network import DiscreteActorCriticNN
+from PPO.utils.custom_deque import CustomDeque
 
 
 class PPO:
@@ -61,7 +61,7 @@ class PPO:
             "n_episodes": 0,  # Number of episodes
             "kl_divergence_breaks": 0,  # Number of times KL-divergence breaks
             "flags": 0,  # Flags caught
-            "flags_last_n": deque(maxlen=100),  # Flags caught in last 100 episodes
+            "flags_last_n": CustomDeque(),  # Flags caught in last 100 episodes
             "best_reward": 0.0,  # Best episodic returns
             # Per Batch
             "batch_lens": [],  # Episodic lengths in batch
@@ -268,7 +268,7 @@ class PPO:
             # Generic gym rollout on one episode
             obs = self.env.reset()
             done = False
-
+            flag = False
             """
                 Run an episode for a maximum of max_timesteps_per_episode timesteps
             """
@@ -292,10 +292,7 @@ class PPO:
                 obs, rew, done, info = self.env.step(action)
 
                 if info["flag_get"]:
-                    batch_flags += 1
-                    self.logger["flags_last_n"].append(1)
-                else:
-                    self.logger["flags_last_n"].append(0)
+                    flag = True
 
                 if self.capture_frames:
                     ep_frames.append(self.env.frame)
@@ -312,6 +309,12 @@ class PPO:
             batch_rews.append(ep_rews)
             batch_vals.append(ep_vals)
             batch_dones.append(ep_dones)
+
+            if flag:
+                batch_flags += 1
+                self.logger["flags_last_n"].add_to_front(1)
+            else:
+                self.logger["flags_last_n"].add_to_front(0)
 
             sum_rewards = np.sum(ep_rews)
             if sum_rewards > batch_best_rews:
@@ -423,7 +426,10 @@ class PPO:
         num_episodes = self.logger["n_episodes"]
         kl_divergence_breaks = self.logger["kl_divergence_breaks"]
         flags_caught = self.logger["flags"]
-
+        flag_percentage = (
+            self.logger["flags_last_n"].get_sum()
+            / self.logger["flags_last_n"].get_length()
+        )
         print(
             f"""
             -------------------- Iteration #{iteration} --------------------\n
@@ -436,11 +442,15 @@ class PPO:
             Number of episodes: {num_episodes}\n
             KL divergence breaks: {kl_divergence_breaks}\n
             Flags caught: {flags_caught}\n
+            Flag percentage: {flag_percentage}\n
         """
         )
 
     def log_epoch(self):
-        flag_percentage = int(sum(self.logger["flags_last_n"]))
+        flag_percentage = (
+            self.logger["flags_last_n"].get_sum()
+            / self.logger["flags_last_n"].get_length()
+        )
 
         self.logger["batch_actor_loss"] = [
             tensor.item() for tensor in self.logger["batch_actor_loss"]
