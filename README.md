@@ -1,5 +1,5 @@
 # IDATT2502 - Project Assignment 
-- written by Edvard Schøyen, Daniel Skymoen, Jarand Romestrand, Kristian Vaula Jensen
+- written by Daniel Skymoen, Edvard Schøyen, Jarand Romestrand, Kristian Vaula Jensen
 
 ## Assignment
 ### Various reinforcement learning tasks
