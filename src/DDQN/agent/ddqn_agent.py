@@ -61,9 +61,6 @@ class DDQNAgent:
         )
         self.loss = nn.SmoothL1Loss().to(self.device)
 
-        self.train_loss = []
-        self.reward_history = []
-
     def update_epsilon(self):
         """
         Adjusts the epsilon value for the epsilon-greedy
