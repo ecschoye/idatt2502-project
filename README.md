@@ -134,13 +134,30 @@ Here are some example runs:
 ### DDQN
 Example runs with DDQN:
 
-<img src="gifs/ddqn_super_mario_1.gif" alt="DDQN Run" width="400"/>
+<img src="assets/ddqn_super_mario_1.gif" alt="DDQN Run" width="400"/>
 
-<img src="gifs/ddqn_super_mario_2.gif" alt="DDQN Run" width="400"/>
+<img src="assets/ddqn_super_mario_2.gif" alt="DDQN Run" width="400"/>
 
 ### PPO
 An example run with PPO:
 
-<img src="gifs/ppo_super_mario_1.gif" alt="PPO Run" width="400"/>
+<img src="assets/ppo_super_mario_1.gif" alt="PPO Run" width="400"/>
 
-<img src="gifs/ppo_super_mario_2.gif" alt="PPO Run" width="400"/>
+<img src="assets/ppo_super_mario_2.gif" alt="PPO Run" width="400"/>
+
+## Performance graphs
+Here are graphs of the models performance in the environment with 15 000 episodes:
+
+### Reward per episode
+#### Stage 1-1
+<img src="assets/1-1-rewards.png" alt="PPO Run" width="400"/>
+
+#### Stage 6-4
+<img src="assets/6-4-rewards.png" alt="PPO Run" width="400"/>
+
+### Completion rate/flag average the last 100 episodes
+#### Stage 1-1
+<img src="assets/1-1-flags.png" alt="PPO Run" width="400"/>
+
+#### Stage 6-4
+<img src="assets/6-4-flags.png" alt="PPO Run" width="400"/>
