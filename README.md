@@ -1,7 +1,7 @@
-# idatt2502-project
+# IDATT2502 - Project Assignment 
 - written by Edvard Schøyen, Daniel Skymoen, Jarand Romestrand, Kristian Vaula Jensen
 
-## Asignement
+## Assignment
 ### Various reinforcement learning tasks
 #### Assignment proposals:
 - Choose an environment - test different algorithms
@@ -10,19 +10,19 @@
 - Explore different configurations of an algorithm
 - Try a hardcore environment: MineRL, Atari, Doom​
 
-We choose to try a hardcore environment, and the environment we ended up with was super mario bros.
+We chose to try a hardcore environment, and the environment we ended up with was Super Mario Bros.
 
 Read more about the environment here: https://pypi.org/project/gym-super-mario-bros/
 
 ## Problems statement
 Compare the performence of DDQN and PPO in the Super Mario
-Bros evniroment.
+Bros environment.
 
 ## Requirements
 Here are the requirements to run the project:
 - Python >=3.9, <3.12
 
-Prefered requirements for easier setup and running of project:
+Preferred requirements for easier setup and running of the project:
 - Make
 
 ### Windows
@@ -44,7 +44,7 @@ This function creates a virtual environment for all the dependecies required for
 make setup
 ```
 
-Pyhton3 is set to standard and if your computer uses python instead of python3 you can overwrite this with the command under:
+Python3 is set to standard and if your computer uses python instead of python3 you can overwrite this with the command below:
 
 ```bash
 make setup PYTHON=python
@@ -52,6 +52,7 @@ make setup PYTHON=python
 
 #### Neptun
 An .env file is required to use Neptun for logging the training of a model.
+This must be put inside the src folder.
 Example of the contents needed for Neptun:
 ```bash
 NEPTUNE_API_TOKEN="YOUR_API_KEY"
@@ -59,7 +60,7 @@ NEPTUNE_PROJECT_NAME="YOUR_NEPTUN_PROJECT_NAME"
 ```
 
 ### Running the project
-The commands under activates the environment created in the seupup section and then runs the python code.
+The commands under activates the environment created in the setup section and then runs the python code.
 
 #### Train the models
 This function activates the environment and then trains the ddqn.
@@ -91,25 +92,25 @@ You can use these args on both ppo and ddqn. The args can also be combined.
 To specify flags for logging use the commands under:
 
 ##### Log training
-Logs the traning to make graphs on Neptun
+Logs the training to make graphs on Neptun
 ```bash
 make ddqn args="--log"
 ```
 
 ##### Log the completed model
-Logs the model to make graphs on Neptun
+Logs the model to Neptun
 ```bash
 make ddqn args="--log-model"
 ```
 
 ##### Log training and the completed model
-Logs the training and the model to make graphs on Neptun
+Logs the training to make graphs and the model on Neptun
 ```bash
 make ddqn args="--log --log-model"
 ```
 
 ##### Python options
-Pyhton3 is set to standard and if your computer uses python instead of python3 you can overwrite this with the command under:
+Pyhton3 is set as standard so if your computer uses python instead of python3 you can overwrite this with the command below:
 
 ```bash
 make ddqn PYTHON=python
